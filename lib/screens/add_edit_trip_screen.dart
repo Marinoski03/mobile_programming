@@ -1,4 +1,7 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+
+import '../models/trip.dart';
 
 class AddEditTripScreen extends StatefulWidget {
   final Trip? trip; // Se null, è una nuova aggiunta; altrimenti, è una modifica
