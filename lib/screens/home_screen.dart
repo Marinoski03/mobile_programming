@@ -1,3 +1,13 @@
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:travel_diary_app/screens/search_screen.dart';
+import 'package:travel_diary_app/screens/trip_detail_screen.dart';
+
+import '../models/trip.dart';
+import 'add_edit_trip_screen.dart';
+import 'analysis_screen.dart';
+import 'categories_screen.dart';
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
