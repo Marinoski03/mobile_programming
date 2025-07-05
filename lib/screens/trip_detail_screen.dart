@@ -1,3 +1,8 @@
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+
+import '../models/trip.dart';
+
 class TripDetailScreen extends StatefulWidget {
   final Trip trip;
 

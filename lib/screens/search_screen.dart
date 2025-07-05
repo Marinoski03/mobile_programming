@@ -1,3 +1,8 @@
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+
+import '../models/trip.dart';
+
 class SearchScreen extends StatefulWidget {
   final String? initialCategory;
   const SearchScreen({super.key, this.initialCategory});

@@ -1,3 +1,8 @@
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+
+import '../models/trip.dart';
+
 class AnalysisScreen extends StatelessWidget {
   const AnalysisScreen({super.key});
 
