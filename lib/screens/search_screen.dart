@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:travel_diary_app/screens/trip_detail_screen.dart';
 
 import '../models/trip.dart';
 

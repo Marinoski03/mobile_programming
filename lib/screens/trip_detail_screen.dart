@@ -1,7 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import '../models/trip.dart';
+import 'add_edit_trip_screen.dart';
 
 class TripDetailScreen extends StatefulWidget {
   final Trip trip;
