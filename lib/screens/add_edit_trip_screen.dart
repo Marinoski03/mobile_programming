@@ -25,17 +25,31 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
   late bool _toRepeat;
   late String _selectedCategory;
 
-  final List<String> _categories = ['Generale', 'Cultura', 'Natura', 'Relax', 'Avventura', 'Lavoro'];
+  final List<String> _categories = [
+    'Generale',
+    'Cultura',
+    'Natura',
+    'Relax',
+    'Avventura',
+    'Lavoro',
+  ];
 
   @override
   void initState() {
     super.initState();
     _titleController = TextEditingController(text: widget.trip?.title ?? '');
-    _locationController = TextEditingController(text: widget.trip?.location ?? '');
-    _descriptionController = TextEditingController(text: widget.trip?.description ?? '');
-    _imageUrlsController = TextEditingController(text: widget.trip?.imageUrls.join(', ') ?? '');
+    _locationController = TextEditingController(
+      text: widget.trip?.location ?? '',
+    );
+    _descriptionController = TextEditingController(
+      text: widget.trip?.description ?? '',
+    );
+    _imageUrlsController = TextEditingController(
+      text: widget.trip?.imageUrls.join(', ') ?? '',
+    );
     _startDate = widget.trip?.startDate ?? DateTime.now();
-    _endDate = widget.trip?.endDate ?? DateTime.now().add(const Duration(days: 7));
+    _endDate =
+        widget.trip?.endDate ?? DateTime.now().add(const Duration(days: 7));
     _isFavorite = widget.trip?.isFavorite ?? false;
     _toRepeat = widget.trip?.toRepeat ?? false;
     _selectedCategory = widget.trip?.category ?? _categories.first;
@@ -67,12 +81,16 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
         if (isStartDate) {
           _startDate = picked;
           if (_startDate.isAfter(_endDate)) {
-            _endDate = _startDate.add(const Duration(days: 7)); // Assicura che la data di fine sia dopo l'inizio
+            _endDate = _startDate.add(
+              const Duration(days: 7),
+            ); // Assicura che la data di fine sia dopo l'inizio
           }
         } else {
           _endDate = picked;
           if (_endDate.isBefore(_startDate)) {
-            _startDate = _endDate.subtract(const Duration(days: 7)); // Assicura che la data di inizio sia prima della fine
+            _startDate = _endDate.subtract(
+              const Duration(days: 7),
+            ); // Assicura che la data di inizio sia prima della fine
           }
         }
       });
@@ -131,7 +149,9 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.trip == null ? 'Aggiungi Nuovo Viaggio' : 'Modifica Viaggio'),
+        title: Text(
+          widget.trip == null ? 'Aggiungi Nuovo Viaggio' : 'Modifica Viaggio',
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -180,7 +200,9 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                           border: OutlineInputBorder(),
                           prefixIcon: Icon(Icons.calendar_today),
                         ),
-                        child: Text(DateFormat('dd/MM/yyyy').format(_startDate)),
+                        child: Text(
+                          DateFormat('dd/MM/yyyy').format(_startDate),
+                        ),
                       ),
                     ),
                   ),
@@ -265,10 +287,14 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
               ElevatedButton.icon(
                 onPressed: _saveTrip,
                 icon: const Icon(Icons.save),
-                label: Text(widget.trip == null ? 'Salva Viaggio' : 'Aggiorna Viaggio'),
+                label: Text(
+                  widget.trip == null ? 'Salva Viaggio' : 'Aggiorna Viaggio',
+                ),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               ),
             ],
