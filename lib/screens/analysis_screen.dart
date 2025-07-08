@@ -13,7 +13,11 @@ class AnalysisScreen extends StatelessWidget {
 
     Map<String, int> tripsByCategory = {};
     for (var trip in dummyTrips) {
-      tripsByCategory.update(trip.category, (value) => value + 1, ifAbsent: () => 1);
+      tripsByCategory.update(
+        trip.category,
+        (value) => value + 1,
+        ifAbsent: () => 1,
+      );
     }
 
     // Calcolo viaggi per anno
@@ -35,9 +39,7 @@ class AnalysisScreen extends StatelessWidget {
     final visitedLocations = dummyTrips.map((e) => e.location).toSet().toList();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Analisi Viaggi'),
-      ),
+      appBar: AppBar(title: const Text('Analisi Viaggi')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -45,12 +47,16 @@ class AnalysisScreen extends StatelessWidget {
           children: [
             Text(
               'Riepilogo Generale',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
             Card(
               elevation: 4,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
@@ -72,15 +78,21 @@ class AnalysisScreen extends StatelessWidget {
             const SizedBox(height: 30),
 
             Text(
-              'Distribuzione per Tipologia di Viaggio',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+              'Distribuzione per Categorie',
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
             tripsByCategory.isEmpty
-                ? const Center(child: Text('Nessuna categoria di viaggio registrata.'))
+                ? const Center(
+                    child: Text('Nessuna categoria di viaggio registrata.'),
+                  )
                 : Card(
                     elevation: 4,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
@@ -98,30 +110,38 @@ class AnalysisScreen extends StatelessWidget {
 
             Text(
               'Paesi/Località Visitate',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
             Card(
               elevation: 4,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (visitedLocations.isEmpty)
-                      const Center(child: Text('Nessuna località visitata ancora.'))
+                      const Center(
+                        child: Text('Nessuna località visitata ancora.'),
+                      )
                     else
-                      ...visitedLocations.map((location) => Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4.0),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.place, size: 20),
-                                const SizedBox(width: 8),
-                                Expanded(child: Text(location)),
-                              ],
-                            ),
-                          )),
+                      ...visitedLocations.map(
+                        (location) => Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4.0),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.place, size: 20),
+                              const SizedBox(width: 8),
+                              Expanded(child: Text(location)),
+                            ],
+                          ),
+                        ),
+                      ),
                     const SizedBox(height: 16),
                     // Placeholder per la mappa
                     Container(
@@ -136,7 +156,10 @@ class AnalysisScreen extends StatelessWidget {
                       child: const Text(
                         'Mappa delle località visitate (richiede integrazione libreria mappe)',
                         textAlign: TextAlign.center,
-                        style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
+                        style: TextStyle(
+                          color: Colors.grey,
+                          fontStyle: FontStyle.italic,
+                        ),
                       ),
                     ),
                   ],
