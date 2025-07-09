@@ -1,8 +1,8 @@
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-import 'package:travel_diary_app/screens/search_screen.dart';
+// lib/screens/categories_screen.dart
 
-import '../models/trip.dart';
+import 'package:flutter/material.dart'; // Fondamentale per i widget Flutter
+import '../helpers/trip_database_helper.dart'; // Per interagire con il database
+import 'package:travel_diary_app/screens/search_screen.dart'; // Assicurati che il percorso sia corretto
 
 class CategoriesScreen extends StatefulWidget {
   const CategoriesScreen({super.key});
@@ -12,36 +12,37 @@ class CategoriesScreen extends StatefulWidget {
 }
 
 class _CategoriesScreenState extends State<CategoriesScreen> {
-  // Mappa per contare i viaggi per categoria
+  // Mappa per contare i viaggi per categoria, inizializzata vuota
   Map<String, int> _categoryCounts = {};
-  final TextEditingController _newCategoryController = TextEditingController();
+
+  // Future per gestire lo stato di caricamento dei dati iniziali
+  late Future<void> _loadCategoriesFuture;
 
   @override
   void initState() {
     super.initState();
-    _updateCategoryCounts();
+    // Inizializza il Future che caricherà i dati quando la schermata viene creata
+    _loadCategoriesFuture = _loadCategoryCounts();
   }
 
-  void _updateCategoryCounts() {
-    _categoryCounts = {};
-    for (var trip in dummyTrips) {
-      _categoryCounts.update(trip.category, (value) => value + 1, ifAbsent: () => 1);
-    }
-    setState(() {}); // Aggiorna l'UI
-  }
+  // Metodo asincrono per caricare e calcolare i conteggi delle categorie dal database
+  Future<void> _loadCategoryCounts() async {
+    // Recupera tutti i viaggi dal database usando il TripDatabaseHelper
+    final allTrips = await TripDatabaseHelper.instance.getAllTrips();
 
-  void _addNewCategory() {
-    final newCategory = _newCategoryController.text.trim();
-    if (newCategory.isNotEmpty && !_categoryCounts.containsKey(newCategory)) {
-      setState(() {
-        // Aggiungi la nuova categoria alla lista delle categorie disponibili in AddEditTripScreen
-        // Questo è un esempio semplificato, in un'app reale avresti un servizio per gestire le categorie
-        // Per ora, possiamo aggiungere una voce fittizia alla mappa dei conteggi per visualizzarla
-        _categoryCounts[newCategory] = 0;
-        _newCategoryController.clear();
-      });
-      Navigator.of(context).pop(); // Chiudi il dialogo
+    // Reset della mappa dei conteggi per un nuovo calcolo
+    final Map<String, int> counts = {};
+
+    // Itera su tutti i viaggi recuperati e aggiorna i conteggi per categoria
+    for (var trip in allTrips) {
+      counts.update(trip.category, (value) => value + 1, ifAbsent: () => 1);
     }
+
+    // Aggiorna lo stato del widget per ricostruire l'UI con i nuovi conteggi
+    // Questo è importante per visualizzare i dati dopo che sono stati caricati
+    setState(() {
+      _categoryCounts = counts;
+    });
   }
 
   @override
@@ -49,84 +50,106 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Categorie Viaggi'),
+        actions: [
+          // Pulsante per ricaricare manualmente le categorie (utile per il debugging o aggiornamenti)
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+              setState(() {
+                _loadCategoriesFuture =
+                    _loadCategoryCounts(); // Ricarica i dati
+              });
+            },
+            tooltip: 'Aggiorna categorie',
+          ),
+        ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Riepilogo per categoria:',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            _categoryCounts.isEmpty
-                ? const Center(child: Text('Nessuna categoria trovata.'))
-                : Expanded(
-                    child: ListView.builder(
-                      itemCount: _categoryCounts.length,
-                      itemBuilder: (context, index) {
-                        final category = _categoryCounts.keys.elementAt(index);
-                        final count = _categoryCounts[category];
-                        return Card(
-                          margin: const EdgeInsets.symmetric(vertical: 8.0),
-                          elevation: 2,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          child: ListTile(
-                            leading: const Icon(Icons.folder_open),
-                            title: Text(category),
-                            trailing: Text('$count viaggi'),
-                            onTap: () {
-                              // Potresti navigare a una schermata di ricerca filtrata per questa categoria
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => SearchScreen(initialCategory: category),
-                                ),
-                              );
-                            },
-                          ),
-                        );
-                      },
-                    ),
+      // FutureBuilder per gestire i diversi stati del caricamento asincrono dei dati
+      body: FutureBuilder<void>(
+        future: _loadCategoriesFuture, // Il Future che gestisce il caricamento
+        builder: (context, snapshot) {
+          // Mostra un indicatore di caricamento mentre i dati sono in attesa
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          // Mostra un messaggio di errore se il caricamento fallisce
+          if (snapshot.hasError) {
+            return Center(
+              child: Text(
+                'Errore nel caricamento delle categorie: ${snapshot.error}',
+              ),
+            );
+          }
+
+          // Quando i dati sono stati caricati, costruisce l'interfaccia utente
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Riepilogo per categoria:',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
                   ),
-            const SizedBox(height: 20),
-            ElevatedButton.icon(
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                      title: const Text('Aggiungi Nuova Categoria'),
-                      content: TextField(
-                        controller: _newCategoryController,
-                        decoration: const InputDecoration(hintText: 'Nome categoria'),
-                      ),
-                      actions: <Widget>[
-                        TextButton(
-                          child: const Text('Annulla'),
-                          onPressed: () {
-                            Navigator.of(context).pop();
+                ),
+                const SizedBox(height: 10),
+                // Se non ci sono categorie (o viaggi), mostra un messaggio all'utente
+                _categoryCounts.isEmpty
+                    ? const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(20.0),
+                          child: Text(
+                            'Nessuna categoria trovata. Aggiungi dei viaggi per vederle qui.',
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      )
+                    : Expanded(
+                        // Lista scrollabile delle categorie e dei loro conteggi
+                        child: ListView.builder(
+                          itemCount: _categoryCounts.length,
+                          itemBuilder: (context, index) {
+                            final category = _categoryCounts.keys.elementAt(
+                              index,
+                            );
+                            final count = _categoryCounts[category];
+                            return Card(
+                              margin: const EdgeInsets.symmetric(vertical: 8.0),
+                              elevation: 2,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: ListTile(
+                                leading: const Icon(Icons.folder_open),
+                                title: Text(category),
+                                trailing: Text('$count viaggi'),
+                                onTap: () {
+                                  // Naviga alla SearchScreen filtrando per la categoria selezionata
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => SearchScreen(
+                                        initialCategory: category,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            );
                           },
                         ),
-                        TextButton(
-                          child: const Text('Aggiungi'),
-                          onPressed: _addNewCategory,
-                        ),
-                      ],
-                    );
-                  },
-                );
-              },
-              icon: const Icon(Icons.add),
-              label: const Text('Crea Nuova Categoria'),
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size.fromHeight(40), // Rende il pulsante più largo
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ),
+                      ),
+                const SizedBox(height: 20),
+                // Il pulsante per aggiungere nuove categorie è stato rimosso in questa schermata
+                // perché le categorie sono derivate dai viaggi esistenti nel database.
+                // Se vuoi un elenco predefinito o la possibilità di aggiungerle a prescindere,
+                // la logica andrebbe gestita in un altro punto dell'applicazione.
+              ],
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
