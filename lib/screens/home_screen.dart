@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'dart:io'; // <--- AGGIUNGI QUESTO IMPORT PER USARE File()
+import 'dart:io';
 
 import '../models/trip.dart';
 import '../helpers/trip_database_helper.dart';
@@ -166,37 +166,186 @@ class _HomeScreenState extends State<HomeScreen> {
                                       context,
                                       TripDetailScreen(trip: trip),
                                     ),
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(16.0),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            trip.title,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .titleLarge
-                                                ?.copyWith(
-                                                  fontWeight: FontWeight.bold,
+                                    child: Row(
+                                      // Usa una Row per l'immagine a sinistra e il testo a destra
+                                      children: [
+                                        // Sezione Immagine
+                                        ClipRRect(
+                                          borderRadius: const BorderRadius.only(
+                                            topLeft: Radius.circular(12),
+                                            bottomLeft: Radius.circular(12),
+                                          ),
+                                          child: SizedBox(
+                                            width:
+                                                100, // Larghezza fissa per l'immagine
+                                            height:
+                                                100, // Altezza fissa per l'immagine
+                                            child: Image(
+                                              image: trip.imageUrls.isNotEmpty
+                                                  ? _getImageProvider(
+                                                      trip.imageUrls.first,
+                                                      trip.continent,
+                                                    )
+                                                  : _getImageProvider(
+                                                      '',
+                                                      trip.continent,
+                                                    ), // Usa il tuo helper per il fallback
+                                              fit: BoxFit.cover,
+                                              errorBuilder:
+                                                  (context, error, stackTrace) {
+                                                    print(
+                                                      'DEBUG - Errore in HomeScreen (Ultimi viaggi) caricamento immagine: $error',
+                                                    );
+                                                    return _buildNoImagePlaceholder(
+                                                      height: 100,
+                                                      width: 100,
+                                                    );
+                                                  },
+                                            ),
+                                          ),
+                                        ),
+                                        // Sezione Contenuto Testuale
+                                        Expanded(
+                                          // Permette alla colonna del testo di occupare lo spazio rimanente
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(12.0),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  trip.title,
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .titleLarge
+                                                      ?.copyWith(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                  maxLines:
+                                                      1, // Limita a una riga
+                                                  overflow: TextOverflow
+                                                      .ellipsis, // Aggiunge "..."
                                                 ),
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  trip.location,
+                                                  style: Theme.of(
+                                                    context,
+                                                  ).textTheme.titleMedium,
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                                const SizedBox(height: 4),
+                                                Text(
+                                                  '${DateFormat('dd/MM/yyyy').format(trip.startDate)} - ${DateFormat('dd/MM/yyyy').format(trip.endDate)}',
+                                                  style: Theme.of(
+                                                    context,
+                                                  ).textTheme.bodyMedium,
+                                                ),
+                                                // *** INIZIO MODIFICA: AGGIUNTA BADGE ***
+                                                if (trip.isFavorite ||
+                                                    trip.toBeRepeated) // Mostra questa riga solo se almeno una condizione è vera
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                          top: 8.0,
+                                                        ), // Spazio sopra i badge
+                                                    child: Row(
+                                                      children: [
+                                                        if (trip.isFavorite)
+                                                          Container(
+                                                            padding:
+                                                                const EdgeInsets.symmetric(
+                                                                  horizontal: 8,
+                                                                  vertical: 4,
+                                                                ),
+                                                            decoration: BoxDecoration(
+                                                              color: Colors
+                                                                  .amber
+                                                                  .shade700, // Colore per "Preferito"
+                                                              borderRadius:
+                                                                  BorderRadius.circular(
+                                                                    15,
+                                                                  ),
+                                                            ),
+                                                            child: Row(
+                                                              children: [
+                                                                const Icon(
+                                                                  Icons.star,
+                                                                  color: Colors
+                                                                      .white,
+                                                                  size: 16,
+                                                                ),
+                                                                const SizedBox(
+                                                                  width: 4,
+                                                                ),
+                                                                Text(
+                                                                  'Preferito',
+                                                                  style: Theme.of(context)
+                                                                      .textTheme
+                                                                      .bodySmall
+                                                                      ?.copyWith(
+                                                                        color: Colors
+                                                                            .white,
+                                                                      ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          ),
+                                                        const SizedBox(
+                                                          width: 8,
+                                                        ), // Spazio tra i badge
+                                                        if (trip.toBeRepeated)
+                                                          Container(
+                                                            padding:
+                                                                const EdgeInsets.symmetric(
+                                                                  horizontal: 8,
+                                                                  vertical: 4,
+                                                                ),
+                                                            decoration: BoxDecoration(
+                                                              color: Colors
+                                                                  .green
+                                                                  .shade700, // Colore per "Da ripetere"
+                                                              borderRadius:
+                                                                  BorderRadius.circular(
+                                                                    15,
+                                                                  ),
+                                                            ),
+                                                            child: Row(
+                                                              children: [
+                                                                const Icon(
+                                                                  Icons.repeat,
+                                                                  color: Colors
+                                                                      .white,
+                                                                  size: 16,
+                                                                ),
+                                                                const SizedBox(
+                                                                  width: 4,
+                                                                ),
+                                                                Text(
+                                                                  'Da ripetere',
+                                                                  style: Theme.of(context)
+                                                                      .textTheme
+                                                                      .bodySmall
+                                                                      ?.copyWith(
+                                                                        color: Colors
+                                                                            .white,
+                                                                      ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                // *** FINE MODIFICA: AGGIUNTA BADGE ***
+                                              ],
+                                            ),
                                           ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            trip.location,
-                                            style: Theme.of(
-                                              context,
-                                            ).textTheme.titleMedium,
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            '${DateFormat('dd/MM/yyyy').format(trip.startDate)} - ${DateFormat('dd/MM/yyyy').format(trip.endDate)}',
-                                            style: Theme.of(
-                                              context,
-                                            ).textTheme.bodyMedium,
-                                          ),
-                                        ],
-                                      ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 );
@@ -271,7 +420,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                                   top: Radius.circular(12),
                                                 ),
                                             child: Image(
-                                              // <--- MODIFICATO QUI: Usa Image widget
                                               image: _getImageProvider(
                                                 coverImageUrl,
                                                 trip.continent,
@@ -279,13 +427,16 @@ class _HomeScreenState extends State<HomeScreen> {
                                               height: 100,
                                               width: double.infinity,
                                               fit: BoxFit.cover,
-                                              errorBuilder:
-                                                  (context, error, stackTrace) {
-                                                    print(
-                                                      'DEBUG - Errore in HomeScreen loading image: $error',
-                                                    );
-                                                    return _buildNoImagePlaceholder();
-                                                  },
+                                              errorBuilder: (context, error, stackTrace) {
+                                                print(
+                                                  'DEBUG - Errore in HomeScreen loading image: $error',
+                                                );
+                                                // Passa le dimensioni specifiche al placeholder
+                                                return _buildNoImagePlaceholder(
+                                                  height: 100,
+                                                  width: double.infinity,
+                                                );
+                                              },
                                             ),
                                           ),
                                           Padding(
@@ -331,7 +482,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _navigateToScreen(context, const AddEditTripScreen()),
+        onPressed: () => _navigateToScreen(context, AddEditTripScreen()),
         icon: const Icon(Icons.add),
         label: const Text('Aggiungi Viaggio'),
         backgroundColor: Colors.white,
@@ -341,10 +492,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildNoImagePlaceholder() {
+  // Modifica qui: aggiungi parametri opzionali per altezza e larghezza
+  Widget _buildNoImagePlaceholder({double? height, double? width}) {
     return Container(
-      height: 100,
-      width: double.infinity,
+      height: height ?? 100, // Usa l'altezza passata o default 100
+      width:
+          width ??
+          double.infinity, // Usa la larghezza passata o default double.infinity
       color: Colors.grey[200],
       child: Center(
         child: Icon(
