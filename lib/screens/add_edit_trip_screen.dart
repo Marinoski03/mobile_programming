@@ -169,27 +169,17 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
   void _removeImage(int index, {bool isExisting = false}) {
     setState(() {
       if (isExisting) {
-        final String imageUrlToRemove = _existingImageUrls[index];
+        // Rimuovi la dichiarazione della variabile, non è più necessaria
+        // final String imageUrlToRemove = _existingImageUrls[index]; // RIMUOVI QUESTA RIGA
         _existingImageUrls.removeAt(index);
-        // Opzionale: eliminare fisicamente il file dal dispositivo se era locale
-        // if (imageUrlToRemove.startsWith('/data/') || imageUrlToRemove.startsWith('file://')) {
-        //   try {
-        //     File(imageUrlToRemove).deleteSync();
-        //     print('DEBUG - File esistente eliminato dal filesystem: $imageUrlToRemove');
-        //   } catch (e) {
-        //     print('Errore eliminazione file esistente $imageUrlToRemove: $e');
-        //   }
-        // }
+        // Assicurati che TUTTA la logica di eliminazione fisica sia rimossa o commentata
+        // (le righe che iniziavano con 'if (imageUrlToRemove.startsWith...')
       } else {
-        final String imagePathToRemove = _newImagePaths[index];
+        // Rimuovi la dichiarazione della variabile, non è più necessaria
+        // final String imagePathToRemove = _newImagePaths[index]; // RIMUOVI QUESTA RIGA
         _newImagePaths.removeAt(index);
-        // Opzionale: eliminare fisicamente il file appena aggiunto (ma non ancora nel DB)
-        // try {
-        //   File(imagePathToRemove).deleteSync();
-        //   print('DEBUG - Nuovo file eliminato dal filesystem: $imagePathToRemove');
-        // } catch (e) {
-        //   print('Errore eliminazione nuovo file $imagePathToRemove: $e');
-        // }
+        // Assicurati che TUTTA la logica di eliminazione fisica sia rimossa o commentata
+        // (le righe che iniziavano con 'try { File(imagePathToRemove).deleteSync()...')
       }
     });
   }

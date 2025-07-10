@@ -2,8 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'dart:io'; // Per File
-import 'package:image_picker/image_picker.dart'; // Per XFile, se la userai per la selezione immagini qui
+import 'dart:io'; // Per File (necessario per Image.file se mostri immagini locali)
+// import 'package:image_picker/image_picker.dart'; // Rimuovi questo import se non usi ImagePicker qui
 
 import '../models/trip.dart';
 import '../helpers/trip_database_helper.dart';
@@ -21,161 +21,158 @@ class TripDetailScreen extends StatefulWidget {
 
 class _TripDetailScreenState extends State<TripDetailScreen> {
   late Trip _currentTrip;
+  late String
+  _coverImageUrl; // Variabile per memorizzare l'URL dell'immagine di copertina
 
   @override
   void initState() {
     super.initState();
     _currentTrip = widget.trip;
+    _setCoverImage(); // Imposta l'immagine di copertina iniziale
     _refreshTripDetails(); // Assicurati che i dettagli siano aggiornati all'apertura
   }
 
+  // >>> INIZIO DEL METODO _setCoverImage MANCANTE <<<
+  // Metodo per impostare l'immagine di copertina, inclusi i casi di fallback
+  void _setCoverImage() {
+    if (_currentTrip.imageUrls.isNotEmpty) {
+      // Se ci sono URL di immagini nel viaggio, prendi la prima come copertina
+      _coverImageUrl = _currentTrip.imageUrls.first;
+    } else {
+      // Altrimenti, usa l'immagine di default basata sul continente o l'immagine "Generale"
+      _coverImageUrl =
+          AppData.continentImages[_currentTrip.continent] ??
+          AppData.continentImages['Generale']!;
+    }
+  }
+  // >>> FINE DEL METODO _setCoverImage MANCANTE <<<
+
   // Metodo per ricaricare i dettagli del viaggio dal database
   Future<void> _refreshTripDetails() async {
-    final updatedTrip = await TripDatabaseHelper.instance.getTripById(
-      _currentTrip.id!,
-    );
-    if (updatedTrip != null && mounted) {
-      setState(() {
-        _currentTrip = updatedTrip;
-      });
-    }
-  }
-
-  Future<void> _navigateToEditScreen() async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => AddEditTripScreen(
-          trip: _currentTrip,
-        ), // Passa il viaggio per la modifica
-      ),
-    );
-    _refreshTripDetails(); // Aggiorna i dettagli al ritorno dalla modifica
-  }
-
-  Future<void> _toggleFavorite() async {
-    final updatedTrip = _currentTrip.copy(isFavorite: !_currentTrip.isFavorite);
-    await TripDatabaseHelper.instance.updateTrip(updatedTrip);
-    _refreshTripDetails(); // Aggiorna UI e database
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            updatedTrip.isFavorite
-                ? 'Viaggio aggiunto ai preferiti!'
-                : 'Viaggio rimosso dai preferiti.',
-          ),
-        ),
+    try {
+      final updatedTrip = await TripDatabaseHelper.instance.getTripById(
+        _currentTrip.id!,
       );
-    }
-  }
-
-  Future<void> _toggleRepeat() async {
-    final updatedTrip = _currentTrip.copy(
-      toBeRepeated: !_currentTrip.toBeRepeated,
-    );
-    await TripDatabaseHelper.instance.updateTrip(updatedTrip);
-    _refreshTripDetails(); // Aggiorna UI e database
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            updatedTrip.toBeRepeated
-                ? 'Viaggio segnato da ripetere!'
-                : 'Viaggio rimosso da "da ripetere".',
+      if (mounted) {
+        // Manteniamo mounted per sicurezza
+        setState(() {
+          _currentTrip = updatedTrip;
+          _setCoverImage(); // Aggiorna l'immagine di copertina dopo il refresh
+        });
+      }
+    } catch (e) {
+      print('Errore durante il ricaricamento del viaggio: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Impossibile ricaricare i dettagli del viaggio: $e'),
           ),
-        ),
-      );
+        );
+      }
     }
   }
 
-  Future<void> _deleteTrip() async {
-    final confirm = await showDialog<bool>(
+  // Metodo per gestire l'eliminazione del viaggio
+  void _deleteTrip() async {
+    final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Conferma eliminazione'),
+      builder: (ctx) => AlertDialog(
+        title: const Text('Conferma Eliminazione'),
         content: const Text('Sei sicuro di voler eliminare questo viaggio?'),
-        actions: [
+        actions: <Widget>[
           TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
             child: const Text('Annulla'),
+            onPressed: () {
+              Navigator.of(ctx).pop(false);
+            },
           ),
           TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Elimina'),
+            child: const Text('Elimina', style: TextStyle(color: Colors.red)),
+            onPressed: () {
+              Navigator.of(ctx).pop(true);
+            },
           ),
         ],
       ),
     );
 
-    if (confirm == true) {
-      await TripDatabaseHelper.instance.deleteTrip(_currentTrip.id!);
-      if (mounted) {
-        Navigator.of(
-          context,
-        ).pop(true); // Ritorna true per indicare eliminazione
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Viaggio eliminato con successo!')),
-        );
+    if (confirmed == true) {
+      try {
+        await TripDatabaseHelper.instance.deleteTrip(_currentTrip.id!);
+        if (mounted) {
+          Navigator.of(
+            context,
+          ).pop(true); // Indica che il viaggio è stato eliminato
+        }
+      } catch (e) {
+        print('Errore durante l\'eliminazione del viaggio: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Errore durante l\'eliminazione: $e')),
+          );
+        }
       }
     }
   }
 
-  // Helper per ottenere l'ImageProvider corretto
-  ImageProvider _getImageProvider(String imageUrl) {
-    if (imageUrl.startsWith('assets/')) {
-      return AssetImage(imageUrl);
-    } else if (imageUrl.startsWith('/data/') ||
-        imageUrl.startsWith('file://')) {
-      final file = File(imageUrl.replaceFirst('file://', ''));
-      if (file.existsSync()) {
-        return FileImage(file);
-      } else {
-        print(
-          'DEBUG - TripDetailScreen: File immagine locale non trovato: $imageUrl',
-        );
-        // Fallback a immagine del continente o generica
-        return AssetImage(
-          AppData.continentImages[_currentTrip
-                  .continent] ?? // <--- CORREZIONE QUI
-              AppData.continentImages['Generale'] ?? // <--- CORREZIONE QUI
-              'assets/images/default_trip.jpg', // Fallback finale
-        );
-      }
-    } else {
-      // Per URL web o altri casi non riconosciuti, usa un fallback generico
-      return AssetImage(
-        AppData.continentImages[_currentTrip
-                .continent] ?? // <--- CORREZIONE QUI
-            AppData.continentImages['Generale'] ?? // <--- CORREZIONE QUI
-            'assets/images/default_trip.jpg', // Fallback finale
-      );
+  // Metodo per navigare alla schermata di modifica
+  void _editTrip() async {
+    final updatedTrip = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (ctx) => AddEditTripScreen(trip: _currentTrip),
+      ),
+    );
+
+    if (updatedTrip != null && mounted) {
+      setState(() {
+        _currentTrip = updatedTrip as Trip; // Assicurati il tipo
+        _setCoverImage(); // Aggiorna l'immagine di copertina
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Determina l'URL dell'immagine di copertina
-    final String coverImageUrl = _currentTrip.imageUrls.isNotEmpty
-        ? _currentTrip.imageUrls.first
-        : AppData.continentImages[_currentTrip
-                  .continent] ?? // <--- CORREZIONE QUI
-              AppData.continentImages['Generale'] ?? // <--- CORREZIONE QUI
-              'assets/images/default_trip.jpg'; // Fallback finale
-
     return Scaffold(
       extendBodyBehindAppBar: true,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
+        title: Text(
+          _currentTrip.title,
+          style: const TextStyle(color: Colors.white),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
         ),
         actions: [
           IconButton(
+            icon: Icon(
+              _currentTrip.isFavorite ? Icons.star : Icons.star_border,
+              color: Colors.white,
+            ),
+            onPressed: () async {
+              // Inverti lo stato di preferito e aggiorna il DB
+              final updatedTrip = _currentTrip.copy(
+                isFavorite: !_currentTrip.isFavorite,
+              );
+              try {
+                await TripDatabaseHelper.instance.updateTrip(updatedTrip);
+                setState(() {
+                  _currentTrip = updatedTrip;
+                });
+              } catch (e) {
+                print('Errore nell\'aggiornare lo stato di preferito: $e');
+              }
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.edit, color: Colors.white),
-            onPressed: _navigateToEditScreen,
+            onPressed: _editTrip,
           ),
           IconButton(
             icon: const Icon(Icons.delete, color: Colors.white),
@@ -183,44 +180,49 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Stack(
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.blue.shade300, Colors.blue.shade800],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ShaderMask(
-                  shaderCallback: (rect) {
-                    return const LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [Colors.transparent, Colors.black],
-                    ).createShader(
-                      Rect.fromLTRB(0, 0, rect.width, rect.height),
-                    );
-                  },
-                  blendMode: BlendMode.dstIn,
-                  child: Image(
-                    image: _getImageProvider(coverImageUrl), // Usa l'helper
-                    height: 300,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      print('DEBUG - Error loading cover image: $error');
-                      return Container(
-                        height: 300,
-                        color: Colors.grey[300],
-                        child: const Center(
-                          child: Icon(Icons.error, color: Colors.red, size: 50),
-                        ),
-                      );
-                    },
+                // Immagine di copertina del viaggio
+                Container(
+                  height: 250,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      // Gestisce sia percorsi di file che asset
+                      image: _coverImageUrl.startsWith('assets/')
+                          ? AssetImage(_coverImageUrl)
+                          : FileImage(File(_coverImageUrl)) as ImageProvider,
+                      fit: BoxFit.cover,
+                    ),
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(20),
+                      bottomRight: Radius.circular(20),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.3),
+                        spreadRadius: 2,
+                        blurRadius: 5,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
                   ),
                 ),
-                Positioned(
-                  bottom: 20,
-                  left: 16,
-                  right: 16,
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -232,129 +234,160 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                               fontWeight: FontWeight.bold,
                             ),
                       ),
+                      const SizedBox(height: 5),
                       Text(
                         '${DateFormat('dd/MM/yyyy').format(_currentTrip.startDate)} - ${DateFormat('dd/MM/yyyy').format(_currentTrip.endDate)}',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(color: Colors.white70),
+                      ),
+                      const SizedBox(height: 15),
+                      Row(
+                        children: [
+                          _currentTrip.isFavorite
+                              ? Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 5,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.amber.shade700,
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.star,
+                                        color: Colors.white,
+                                        size: 18,
+                                      ),
+                                      const SizedBox(width: 5),
+                                      Text(
+                                        'Preferito',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.copyWith(color: Colors.white),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              : const SizedBox.shrink(), // Non mostrare nulla se non è preferito
+                          const SizedBox(width: 10), // Spazio tra i bottoni
+
+                          _currentTrip.toBeRepeated
+                              ? Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 5,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green.shade700,
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.repeat,
+                                        color: Colors.white,
+                                        size: 18,
+                                      ),
+                                      const SizedBox(width: 5),
+                                      Text(
+                                        'Segna da ripetere',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.copyWith(color: Colors.white),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              : const SizedBox.shrink(), // Non mostrare nulla se non è da ripetere
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        'Categoria: ${_currentTrip.category}',
                         style: Theme.of(
                           context,
-                        ).textTheme.titleLarge?.copyWith(color: Colors.white70),
+                        ).textTheme.titleMedium?.copyWith(color: Colors.white),
                       ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      ElevatedButton.icon(
-                        onPressed: _toggleFavorite,
-                        icon: Icon(
-                          _currentTrip.isFavorite
-                              ? Icons.star
-                              : Icons.star_border,
-                          color: _currentTrip.isFavorite ? Colors.amber : null,
-                        ),
-                        label: Text(
-                          _currentTrip.isFavorite ? 'Preferito' : 'Preferito',
-                        ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'Note personali:',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
                       ),
-                      ElevatedButton.icon(
-                        onPressed: _toggleRepeat,
-                        icon: Icon(
-                          _currentTrip.toBeRepeated
-                              ? Icons.repeat_on
-                              : Icons.repeat,
-                          color: _currentTrip.toBeRepeated ? Colors.blue : null,
-                        ),
-                        label: Text(
-                          _currentTrip.toBeRepeated
-                              ? 'Segnato da ripetere'
-                              : 'Segna da ripetere',
+                      Text(
+                        _currentTrip.notes.isNotEmpty
+                            ? _currentTrip.notes
+                            : 'Nessuna nota aggiunta.',
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodyLarge?.copyWith(color: Colors.white70),
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        'Galleria immagini:',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    'Categoria: ${_currentTrip.category}',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'Note personali:',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    _currentTrip.notes.isNotEmpty
-                        ? _currentTrip.notes
-                        : 'Nessuna nota aggiunta.',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    'Galleria immagini:',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  _currentTrip.imageUrls.isEmpty
-                      ? Center(
-                          child: Text(
-                            'Nessuna immagine specifica aggiunta per questo viaggio.',
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                        )
-                      : GridView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 3,
-                                crossAxisSpacing: 8.0,
-                                mainAxisSpacing: 8.0,
-                              ),
-                          itemCount: _currentTrip.imageUrls.length,
-                          itemBuilder: (context, index) {
-                            final imageUrl = _currentTrip.imageUrls[index];
-                            return ClipRRect(
-                              borderRadius: BorderRadius.circular(8.0),
-                              child: Image(
-                                // Usa Image widget
-                                image: _getImageProvider(
-                                  imageUrl,
-                                ), // Passa solo imageUrl qui
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  print(
-                                    'DEBUG - Errore caricamento immagine galleria: $error',
-                                  );
-                                  return Container(
-                                    color: Colors.grey[300],
-                                    child: const Center(
-                                      child: Icon(
-                                        Icons.error,
-                                        color: Colors.red,
+                      const SizedBox(height: 10),
+                      _currentTrip.imageUrls.isNotEmpty
+                          ? SizedBox(
+                              height: 120, // Altezza fissa per la galleria
+                              child: ListView.builder(
+                                scrollDirection: Axis.horizontal,
+                                itemCount: _currentTrip.imageUrls.length,
+                                itemBuilder: (ctx, index) {
+                                  final imageUrl =
+                                      _currentTrip.imageUrls[index];
+                                  return Padding(
+                                    padding: const EdgeInsets.only(right: 8.0),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(10),
+                                      child: Image.file(
+                                        File(imageUrl),
+                                        width: 120,
+                                        height: 120,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) {
+                                          print(
+                                            'Errore caricamento immagine viaggio: $imageUrl, Errore: $error',
+                                          );
+                                          return Container(
+                                            width: 120,
+                                            height: 120,
+                                            color: Colors.grey[600],
+                                            child: const Icon(
+                                              Icons.broken_image,
+                                              color: Colors.white70,
+                                              size: 50,
+                                            ),
+                                          );
+                                        },
                                       ),
                                     ),
                                   );
                                 },
                               ),
-                            );
-                          },
-                        ),
-                ],
-              ),
+                            )
+                          : Text(
+                              'Nessuna immagine specifica aggiunta per questo viaggio.',
+                              style: Theme.of(context).textTheme.bodyLarge
+                                  ?.copyWith(color: Colors.white70),
+                            ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
