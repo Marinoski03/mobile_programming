@@ -1,42 +1,88 @@
 // lib/models/trip.dart
 
 class Trip {
-  int? id; // Cambiato da String a int? per supportare SQLite
-  String title;
-  String location;
-  DateTime startDate;
-  DateTime endDate;
-  String description;
-  List<String> imageUrls; // URL delle immagini o percorsi locali
-  bool isFavorite;
-  bool toRepeat;
-  String category; // Es: "Cultura", "Natura", "Relax"
+  final int?
+  id; // ID del viaggio nel database, può essere null per nuovi viaggi
+  final String title;
+  final String location;
+  final DateTime startDate;
+  final DateTime endDate;
+  final String notes;
+  final String category;
+  final String continent;
+  final bool isFavorite;
+  final bool
+  toBeRepeated; // <--- Nome della proprietà allineato con TripDetailScreen
+  final List<String> imageUrls; // Lista di URL delle immagini
 
   Trip({
-    this.id, // ID opzionale
+    this.id,
     required this.title,
     required this.location,
     required this.startDate,
     required this.endDate,
-    this.description = '',
-    this.imageUrls = const [],
+    this.notes = '',
+    required this.category,
+    required this.continent,
     this.isFavorite = false,
-    this.toRepeat = false,
-    this.category = 'Generale',
+    this.toBeRepeated = false, // <--- Inizializzazione della proprietà
+    this.imageUrls = const [],
   });
 
-  // Metodo per creare una copia modificabile del viaggio
-  Trip copyWith({
+  // Metodo per convertire un Trip in una Map per il database (toMap)
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'title': title,
+      'location': location,
+      'startDate': startDate.toIso8601String(), // Salva come stringa ISO 8601
+      'endDate': endDate.toIso8601String(), // Salva come stringa ISO 8601
+      'notes': notes,
+      'category': category,
+      'continent': continent,
+      'isFavorite': isFavorite ? 1 : 0, // SQLite non ha booleani, usa 0 o 1
+      'toBeRepeated': toBeRepeated ? 1 : 0, // <--- Gestione per il database
+      'imageUrls': imageUrls.join(
+        ',',
+      ), // Salva gli URL come stringa separata da virgole
+    };
+  }
+
+  // Metodo per creare un oggetto Trip da una Map (fromMap)
+  factory Trip.fromMap(Map<String, dynamic> map) {
+    return Trip(
+      id: map['id'] as int?,
+      title: map['title'] as String,
+      location: map['location'] as String,
+      startDate: DateTime.parse(map['startDate'] as String),
+      endDate: DateTime.parse(map['endDate'] as String),
+      notes: map['notes'] as String,
+      category: map['category'] as String,
+      continent: map['continent'] as String,
+      isFavorite: (map['isFavorite'] as int) == 1,
+      toBeRepeated:
+          (map['toBeRepeated'] as int) ==
+          1, // <--- Gestione per la lettura dal database
+      imageUrls: (map['imageUrls'] as String)
+          .split(',')
+          .where((url) => url.isNotEmpty)
+          .toList(), // Converte la stringa in lista
+    );
+  }
+
+  // Metodo copy per creare una copia modificata di un Trip (copy, non copyWith per coerenza con le chiamate precedenti)
+  Trip copy({
     int? id,
     String? title,
     String? location,
     DateTime? startDate,
     DateTime? endDate,
-    String? description,
-    List<String>? imageUrls,
-    bool? isFavorite,
-    bool? toRepeat,
+    String? notes,
     String? category,
+    String? continent,
+    bool? isFavorite,
+    bool? toBeRepeated, // <--- Parametro nel metodo copy
+    List<String>? imageUrls,
   }) {
     return Trip(
       id: id ?? this.id,
@@ -44,71 +90,19 @@ class Trip {
       location: location ?? this.location,
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
-      description: description ?? this.description,
-      imageUrls: imageUrls ?? this.imageUrls,
-      isFavorite: isFavorite ?? this.isFavorite,
-      toRepeat: toRepeat ?? this.toRepeat,
+      notes: notes ?? this.notes,
       category: category ?? this.category,
+      continent: continent ?? this.continent,
+      isFavorite: isFavorite ?? this.isFavorite,
+      toBeRepeated:
+          toBeRepeated ??
+          this.toBeRepeated, // <--- Assegnazione nel metodo copy
+      imageUrls: imageUrls ?? this.imageUrls,
     );
   }
 
-  // Metodo per convertire un Trip in una mappa (per il database)
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id, // SQLite accetta null per autoincrement
-      'title': title,
-      'location': location,
-      'startDate': startDate.toIso8601String(), // Salva come stringa ISO 8601
-      'endDate': endDate.toIso8601String(), // Salva come stringa ISO 8601
-      'description': description,
-      'imageUrls': imageUrls.join(
-        ',',
-      ), // Serializza come stringa separata da virgole
-      'isFavorite': isFavorite
-          ? 1
-          : 0, // Converti boolean in intero (1 per true, 0 per false)
-      'toRepeat': toRepeat
-          ? 1
-          : 0, // Converti boolean in intero (1 per true, 0 per false)
-      'category': category,
-    };
-  }
-
-  // Metodo per creare un Trip da una mappa (dal database)
-  factory Trip.fromMap(Map<String, dynamic> map) {
-    // Funzione helper per il parsing sicuro delle date
-    DateTime _parseDate(dynamic dateString, {DateTime? fallbackDate}) {
-      if (dateString is String && dateString.isNotEmpty) {
-        try {
-          return DateTime.parse(dateString);
-        } catch (e) {
-          // Logga l'errore per il debugging
-          print('Errore di parsing data: "$dateString" - $e');
-        }
-      }
-      // Ritorna una data di fallback (es. data corrente o una data specifica)
-      return fallbackDate ?? DateTime.now();
-    }
-
-    return Trip(
-      id: map['id'], // SQLite restituisce un int
-      title: map['title'],
-      location: map['location'],
-      startDate: _parseDate(map['startDate']), // Usa la funzione helper
-      endDate: _parseDate(map['endDate']), // Usa la funzione helper
-      description:
-          map['description'] ??
-          '', // Se 'description' è null, usa una stringa vuota
-      imageUrls:
-          map['imageUrls'] != null && (map['imageUrls'] as String).isNotEmpty
-          ? (map['imageUrls'] as String).split(
-              ',',
-            ) // Assicurati sia String prima dello split
-          : [],
-      isFavorite: map['isFavorite'] == 1, // Converti intero in boolean
-      toRepeat: map['toRepeat'] == 1, // Converti intero in boolean
-      category:
-          map['category'] ?? 'Generale', // Se 'category' è null, usa 'Generale'
-    );
+  @override
+  String toString() {
+    return 'Trip{id: $id, title: $title, location: $location, startDate: $startDate, endDate: $endDate, notes: $notes, category: $category, continent: $continent, isFavorite: $isFavorite, toBeRepeated: $toBeRepeated, imageUrls: $imageUrls}';
   }
 }
