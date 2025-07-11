@@ -220,6 +220,7 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
       });
     }
   }
+
   void _saveTrip() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
@@ -858,132 +859,10 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _locationController,
-                decoration: const InputDecoration(labelText: 'Località'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Inserisci una località';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: InkWell(
-                      onTap: () => _selectDate(context, true),
-                      child: InputDecorator(
-                        decoration: const InputDecoration(
-                          labelText: 'Data Inizio',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.calendar_today),
-                        ),
-                        child: Text(
-                          DateFormat('dd/MM/yyyy').format(_startDate),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: InkWell(
-                      onTap: () => _selectDate(context, false),
-                      child: InputDecorator(
-                        decoration: const InputDecoration(
-                          labelText: 'Data Fine',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.calendar_today),
-                        ),
-                        child: Text(DateFormat('dd/MM/yyyy').format(_endDate)),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _descriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'Note personali',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.notes),
-                ),
-                maxLines: 3,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _imageUrlsController,
-                decoration: const InputDecoration(
-                  labelText: 'URL Immagini (separate da virgola)',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.image),
-                ),
-                maxLines: 2,
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                value: _selectedCategory,
-                decoration: const InputDecoration(
-                  labelText: 'Categoria',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.category),
-                ),
-                items: _categories.map((String category) {
-                  return DropdownMenuItem<String>(
-                    value: category,
-                    child: Text(category),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    _selectedCategory = newValue!;
-                  });
-                },
-              ),
-              const SizedBox(height: 16),
-              SwitchListTile(
-                title: const Text('Preferito'),
-                secondary: const Icon(Icons.star),
-                value: _isFavorite,
-                onChanged: (bool value) {
-                  setState(() {
-                    _isFavorite = value;
-                  });
-                },
-              ),
-              SwitchListTile(
-                title: const Text('Da ripetere'),
-                secondary: const Icon(Icons.repeat),
-                value: _toRepeat,
-                onChanged: (bool value) {
-                  setState(() {
-                    _toRepeat = value;
-                  });
-                },
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: _saveTrip,
-                icon: const Icon(Icons.save),
-                label: Text(
-                  widget.trip == null ? 'Salva Viaggio' : 'Aggiorna Viaggio',
-                ),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-              ),
-              ElevatedButton(onPressed: _saveTrip, child: const Text('Salva')),
             ),
           ),
         ),
       ),
     );
   }
-}
 }
