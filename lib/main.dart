@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:travel_diary_app/screens/home_screen.dart';
 
 void main() {
