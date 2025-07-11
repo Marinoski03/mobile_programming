@@ -1,11 +1,9 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-
 import '../models/trip.dart';
+import '../helpers/trip_database_helper.dart';
 
 class AddEditTripScreen extends StatefulWidget {
-  final Trip? trip; // Se null, è una nuova aggiunta; altrimenti, è una modifica
+  final Trip? trip;
 
   const AddEditTripScreen({super.key, this.trip});
 
@@ -25,6 +23,7 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
   late bool _toRepeat;
   late String _selectedCategory;
 
+<<<<<<< HEAD
   final List<String> _categories = [
     'Generale',
     'Cultura',
@@ -34,6 +33,8 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
     'Lavoro',
   ];
 
+=======
+>>>>>>> 43afc5f5344c19e9825c5d37610ff9b8573e1f50
   @override
   void initState() {
     super.initState();
@@ -45,19 +46,21 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
       text: widget.trip?.description ?? '',
     );
     _imageUrlsController = TextEditingController(
+<<<<<<< HEAD
       text: widget.trip?.imageUrls.join(', ') ?? '',
     );
     _startDate = widget.trip?.startDate ?? DateTime.now();
     _endDate =
         widget.trip?.endDate ?? DateTime.now().add(const Duration(days: 7));
+=======
+      text: widget.trip?.imageUrls.join(',') ?? '',
+    );
+    _startDate = widget.trip?.startDate ?? DateTime.now();
+    _endDate = widget.trip?.endDate ?? DateTime.now();
+>>>>>>> 43afc5f5344c19e9825c5d37610ff9b8573e1f50
     _isFavorite = widget.trip?.isFavorite ?? false;
     _toRepeat = widget.trip?.toRepeat ?? false;
-    _selectedCategory = widget.trip?.category ?? _categories.first;
-
-    // Assicurati che la categoria esista, altrimenti usa la prima
-    if (!_categories.contains(_selectedCategory)) {
-      _selectedCategory = _categories.first;
-    }
+    _selectedCategory = widget.trip?.category ?? 'Generale';
   }
 
   @override
@@ -69,6 +72,7 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
     super.dispose();
   }
 
+<<<<<<< HEAD
   Future<void> _selectDate(BuildContext context, bool isStartDate) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -98,6 +102,9 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
   }
 
   void _saveTrip() {
+=======
+  void _saveTrip() async {
+>>>>>>> 43afc5f5344c19e9825c5d37610ff9b8573e1f50
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
 
@@ -110,7 +117,6 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
       if (widget.trip == null) {
         // Nuova aggiunta
         final newTrip = Trip(
-          id: DateTime.now().millisecondsSinceEpoch.toString(), // ID univoco
           title: _titleController.text,
           location: _locationController.text,
           startDate: _startDate,
@@ -121,7 +127,8 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
           toRepeat: _toRepeat,
           category: _selectedCategory,
         );
-        dummyTrips.add(newTrip);
+
+        await TripDatabaseHelper.instance.insertTrip(newTrip);
         Navigator.pop(context, newTrip); // Ritorna il nuovo viaggio
       } else {
         // Modifica di un viaggio esistente
@@ -136,10 +143,8 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
           toRepeat: _toRepeat,
           category: _selectedCategory,
         );
-        final index = dummyTrips.indexWhere((t) => t.id == updatedTrip.id);
-        if (index != -1) {
-          dummyTrips[index] = updatedTrip;
-        }
+
+        await TripDatabaseHelper.instance.updateTrip(updatedTrip);
         Navigator.pop(context, updatedTrip); // Ritorna il viaggio modificato
       }
     }
@@ -150,22 +155,22 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
+<<<<<<< HEAD
           widget.trip == null ? 'Aggiungi Nuovo Viaggio' : 'Modifica Viaggio',
+=======
+          widget.trip == null ? 'Aggiungi Viaggio' : 'Modifica Viaggio',
+>>>>>>> 43afc5f5344c19e9825c5d37610ff9b8573e1f50
         ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
-          child: ListView(
+          child: Column(
             children: [
               TextFormField(
                 controller: _titleController,
-                decoration: const InputDecoration(
-                  labelText: 'Titolo del Viaggio',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.title),
-                ),
+                decoration: const InputDecoration(labelText: 'Titolo'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Inserisci un titolo';
@@ -176,11 +181,7 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _locationController,
-                decoration: const InputDecoration(
-                  labelText: 'Località',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.location_on),
-                ),
+                decoration: const InputDecoration(labelText: 'Località'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Inserisci una località';
@@ -189,6 +190,7 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                 },
               ),
               const SizedBox(height: 16),
+<<<<<<< HEAD
               Row(
                 children: [
                   Expanded(
@@ -297,6 +299,9 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                   ),
                 ),
               ),
+=======
+              ElevatedButton(onPressed: _saveTrip, child: const Text('Salva')),
+>>>>>>> 43afc5f5344c19e9825c5d37610ff9b8573e1f50
             ],
           ),
         ),
