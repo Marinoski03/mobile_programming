@@ -3,10 +3,13 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:travel_diary_app/screens/trip_detail_screen.dart';
-import 'package:cached_network_image/cached_network_image.dart'; // Per il caching delle immagini
+// Rimuovi questo import, non useremo CachedNetworkImage per i percorsi locali
+// import 'package:cached_network_image/cached_network_image.dart';
 
+import 'dart:io'; // <--- AGGIUNGI QUESTO IMPORT PER USARE File()
 import '../models/trip.dart';
 import '../helpers/trip_database_helper.dart';
+import '../utils/app_data.dart'; // <--- ASSICURATI DI AVERE QUESTO IMPORT PER AppData
 
 class SearchScreen extends StatefulWidget {
   final String? initialCategory;
@@ -23,15 +26,14 @@ class _SearchScreenState extends State<SearchScreen> {
   DateTime? _endDateFilter;
   List<Trip> _searchResults = [];
 
-  // Lista delle categorie che verrà popolata dinamicamente dal database
-  final List<String> _categories = ['Tutte']; // Inizializza con 'Tutte'
+  final List<String> _categories = ['Tutte'];
 
-  bool _isLoadingCategories = true; // Stato per il caricamento delle categorie
+  bool _isLoadingCategories = true;
 
   @override
   void initState() {
     super.initState();
-    _loadCategoriesAndPerformSearch(); // Carica le categorie e poi esegue la ricerca
+    _loadCategoriesAndPerformSearch();
   }
 
   @override
@@ -40,7 +42,6 @@ class _SearchScreenState extends State<SearchScreen> {
     super.dispose();
   }
 
-  // Nuovo metodo per caricare le categorie dal database
   Future<void> _loadCategoriesAndPerformSearch() async {
     setState(() {
       _isLoadingCategories = true;
@@ -51,40 +52,38 @@ class _SearchScreenState extends State<SearchScreen> {
           .map((trip) => trip.category)
           .toSet()
           .toList();
-      uniqueCategories.sort(); // Ordina le categorie alfabeticamente
+      uniqueCategories.sort();
 
       setState(() {
         _categories.clear();
-        _categories.add('Tutte'); // Aggiungi sempre l'opzione "Tutte"
+        _categories.add('Tutte');
         _categories.addAll(uniqueCategories);
 
-        // Se è stata passata una categoria iniziale, la imposta se valida
         if (widget.initialCategory != null &&
             _categories.contains(widget.initialCategory)) {
           _selectedCategoryFilter = widget.initialCategory!;
         } else {
-          _selectedCategoryFilter =
-              'Tutte'; // Assicurati che sia un valore valido
+          _selectedCategoryFilter = 'Tutte';
         }
       });
     } catch (e) {
-      print('Errore nel caricamento delle categorie: $e'); // Logga l'errore
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Errore nel caricamento delle categorie: $e')),
-      );
+      print('Errore nel caricamento delle categorie: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Errore nel caricamento delle categorie: $e')),
+        );
+      }
     } finally {
       setState(() {
         _isLoadingCategories = false;
       });
-      _performSearch(); // Esegui la ricerca solo dopo aver caricato le categorie
+      _performSearch();
     }
   }
 
   Future<void> _performSearch() async {
-    // Recupera i viaggi dal database
     final trips = await TripDatabaseHelper.instance.getAllTrips();
 
-    // Applica i filtri
     setState(() {
       _searchResults = trips.where((trip) {
         final query = _searchController.text.toLowerCase();
@@ -94,16 +93,13 @@ class _SearchScreenState extends State<SearchScreen> {
         final matchesCategory =
             _selectedCategoryFilter == 'Tutte' ||
             trip.category.toLowerCase() ==
-                _selectedCategoryFilter
-                    .toLowerCase(); // Confronto case-insensitive
+                _selectedCategoryFilter.toLowerCase();
 
-        // Controllo per le date, assicurati che la data del viaggio sia all'interno del range del filtro
         final matchesStartDate =
             _startDateFilter == null ||
             (trip.startDate.isAtSameMomentAs(_startDateFilter!) ||
                 trip.startDate.isAfter(_startDateFilter!));
 
-        // Il filtro endDate dovrebbe includere il giorno selezionato fino alla fine del giorno
         final matchesEndDate =
             _endDateFilter == null ||
             (trip.endDate.isAtSameMomentAs(_endDateFilter!) ||
@@ -131,7 +127,7 @@ class _SearchScreenState extends State<SearchScreen> {
         } else {
           _endDateFilter = picked;
         }
-        _performSearch(); // Ricarica i risultati con il nuovo filtro data
+        _performSearch();
       });
     }
   }
@@ -142,8 +138,36 @@ class _SearchScreenState extends State<SearchScreen> {
       _selectedCategoryFilter = 'Tutte';
       _startDateFilter = null;
       _endDateFilter = null;
-      _performSearch(); // Ricarica i risultati senza filtri
+      _performSearch();
     });
+  }
+
+  // Helper per ottenere l'ImageProvider corretto, simile a TripDetailScreen e HomeScreen
+  ImageProvider _getImageProvider(String imageUrl, String continent) {
+    if (imageUrl.startsWith('assets/')) {
+      return AssetImage(imageUrl);
+    } else if (imageUrl.startsWith('/data/') ||
+        imageUrl.startsWith('file://')) {
+      final file = File(imageUrl.replaceFirst('file://', ''));
+      if (file.existsSync()) {
+        return FileImage(file);
+      } else {
+        print('DEBUG - SearchScreen: File immagine non trovato: $imageUrl');
+        // Fallback a immagine continente o default se il file non esiste
+        return AssetImage(
+          AppData.continentImages[continent] ??
+              AppData.continentImages['Generale'] ??
+              'assets/images/default_trip.jpg',
+        );
+      }
+    } else {
+      // Per ogni altro caso (es. URL web se mai supportati, ma ora fallback a asset)
+      return AssetImage(
+        AppData.continentImages[continent] ??
+            AppData.continentImages['Generale'] ??
+            'assets/images/default_trip.jpg',
+      );
+    }
   }
 
   @override
@@ -154,7 +178,6 @@ class _SearchScreenState extends State<SearchScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // Campo di ricerca testuale
             TextField(
               controller: _searchController,
               decoration: InputDecoration(
@@ -165,22 +188,18 @@ class _SearchScreenState extends State<SearchScreen> {
                   icon: const Icon(Icons.clear),
                   onPressed: () {
                     _searchController.clear();
-                    _performSearch(); // Esegui ricerca con campo vuoto
+                    _performSearch();
                   },
                 ),
               ),
-              onChanged: (value) =>
-                  _performSearch(), // Filtra ad ogni digitazione
+              onChanged: (value) => _performSearch(),
             ),
             const SizedBox(height: 16),
-            // Filtro per Categoria
             Row(
               children: [
                 Expanded(
                   child: _isLoadingCategories
-                      ? const Center(
-                          child: CircularProgressIndicator(),
-                        ) // Mostra caricamento categorie
+                      ? const Center(child: CircularProgressIndicator())
                       : DropdownButtonFormField<String>(
                           value: _selectedCategoryFilter,
                           decoration: const InputDecoration(
@@ -196,7 +215,7 @@ class _SearchScreenState extends State<SearchScreen> {
                           onChanged: (String? newValue) {
                             setState(() {
                               _selectedCategoryFilter = newValue!;
-                              _performSearch(); // Esegui ricerca con nuovo filtro categoria
+                              _performSearch();
                             });
                           },
                         ),
@@ -204,15 +223,12 @@ class _SearchScreenState extends State<SearchScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            // Filtri per Data Inizio e Data Fine
             Row(
               children: [
                 Expanded(
                   child: GestureDetector(
-                    // Usa GestureDetector per un'area più ampia cliccabile
                     onTap: () => _selectDateFilter(context, true),
                     child: AbsorbPointer(
-                      // Impedisce che il TextField riceva il focus
                       child: InputDecorator(
                         decoration: InputDecoration(
                           labelText: 'Data Inizio (filtro)',
@@ -244,10 +260,8 @@ class _SearchScreenState extends State<SearchScreen> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: GestureDetector(
-                    // Usa GestureDetector per un'area più ampia cliccabile
                     onTap: () => _selectDateFilter(context, false),
                     child: AbsorbPointer(
-                      // Impedisce che il TextField riceva il focus
                       child: InputDecorator(
                         decoration: InputDecoration(
                           labelText: 'Data Fine (filtro)',
@@ -279,7 +293,6 @@ class _SearchScreenState extends State<SearchScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            // Pulsante per cancellare tutti i filtri
             Align(
               alignment: Alignment.centerRight,
               child: TextButton.icon(
@@ -289,7 +302,6 @@ class _SearchScreenState extends State<SearchScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            // Risultati della ricerca
             Expanded(
               child: _searchResults.isEmpty
                   ? const Center(
@@ -301,6 +313,18 @@ class _SearchScreenState extends State<SearchScreen> {
                       itemCount: _searchResults.length,
                       itemBuilder: (context, index) {
                         final trip = _searchResults[index];
+                        // Determina l'URL dell'immagine di copertina
+                        final String coverImageUrl;
+                        if (trip.imageUrls.isNotEmpty) {
+                          coverImageUrl = trip.imageUrls.first;
+                        } else {
+                          // Usa l'immagine del continente o una generica di default
+                          coverImageUrl =
+                              AppData.continentImages[trip.continent] ??
+                              AppData.continentImages['Generale'] ??
+                              'assets/images/default_trip.jpg';
+                        }
+
                         return Card(
                           margin: const EdgeInsets.symmetric(vertical: 8.0),
                           elevation: 4,
@@ -310,14 +334,13 @@ class _SearchScreenState extends State<SearchScreen> {
                           child: InkWell(
                             onTap: () async {
                               await Navigator.push(
-                                // Aggiungi await per aggiornare al ritorno
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) =>
                                       TripDetailScreen(trip: trip),
                                 ),
                               );
-                              _performSearch(); // Riesegui la ricerca al ritorno (se un viaggio è stato modificato)
+                              _performSearch();
                             },
                             child: Padding(
                               padding: const EdgeInsets.all(16.0),
@@ -351,34 +374,30 @@ class _SearchScreenState extends State<SearchScreen> {
                                       context,
                                     ).textTheme.bodySmall,
                                   ),
-                                  // Anteprima immagine (opzionale, se vuoi mostrarla nei risultati)
-                                  if (trip.imageUrls.isNotEmpty &&
-                                      trip.imageUrls.first.isNotEmpty)
+                                  // Anteprima immagine (ora usa il metodo _getImageProvider)
+                                  if (coverImageUrl
+                                      .isNotEmpty) // Mostra solo se c'è un URL da caricare
                                     Padding(
                                       padding: const EdgeInsets.only(top: 8.0),
                                       child: ClipRRect(
                                         borderRadius: BorderRadius.circular(
                                           8.0,
                                         ),
-                                        child: CachedNetworkImage(
-                                          imageUrl: trip.imageUrls.first,
+                                        child: Image(
+                                          // <--- MODIFICATO QUI: Usa Image widget
+                                          image: _getImageProvider(
+                                            coverImageUrl,
+                                            trip.continent,
+                                          ),
                                           height: 80,
                                           width: 120,
                                           fit: BoxFit.cover,
-                                          placeholder: (context, url) =>
-                                              Container(
-                                                height: 80,
-                                                width: 120,
-                                                color: Colors.grey[200],
-                                                child: const Center(
-                                                  child:
-                                                      CircularProgressIndicator(
-                                                        strokeWidth: 2,
-                                                      ),
-                                                ),
-                                              ),
-                                          errorWidget: (context, url, error) =>
-                                              _buildImageErrorPlaceholderSmall(),
+                                          errorBuilder: (context, url, error) {
+                                            print(
+                                              'DEBUG - Errore caricamento immagine in SearchScreen: $error',
+                                            );
+                                            return _buildImageErrorPlaceholderSmall();
+                                          },
                                         ),
                                       ),
                                     ),
@@ -396,7 +415,6 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  // Widget helper per il placeholder in caso di errore immagine (versione piccola)
   Widget _buildImageErrorPlaceholderSmall() {
     return Container(
       width: 120,
