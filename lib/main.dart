@@ -10,16 +10,16 @@ class TravelApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const FloatingActionButtonThemeData(
+      backgroundColor: Colors.blueGrey,
+      foregroundColor: Colors.white,
+    );
     return MaterialApp(
       title: 'Travel Tracker',
       theme: ThemeData(
         primarySwatch: Colors.blueGrey,
         visualDensity: VisualDensity.adaptivePlatformDensity,
         appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.blueGrey,
-          foregroundColor: Colors.white,
-        ),
-        floatingActionButtonTheme: const FloatingActionButtonThemeData(
           backgroundColor: Colors.blueGrey,
           foregroundColor: Colors.white,
         ),
