@@ -17,11 +17,10 @@ class AddEditTripScreen extends StatefulWidget {
   const AddEditTripScreen({super.key, this.trip});
 
   @override
-  State<AddEditTripScreen> createState() => _AddEditTripScreenState(); // <-- CORRETTO: Restituisce _AddEditTripScreenState
+  State<AddEditTripScreen> createState() => _AddEditTripScreenState();
 }
 
 class _AddEditTripScreenState extends State<AddEditTripScreen> {
-  // <-- CORRETTO: Il nome della classe State è _AddEditTripScreenState
   final _formKey = GlobalKey<FormState>();
   late String _title;
   late String _selectedContinent;
@@ -31,13 +30,16 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
   late String _category;
   late String _notes;
   late bool _isFavorite;
-  late bool _toBeRepeated; // Già corretto in precedenza
-  // ... il resto del codice rimane invariato
+  late bool _toBeRepeated;
 
-  // Modificato: _newImagePaths conterrà i percorsi delle nuove immagini salvate
   final List<String> _newImagePaths = [];
-  // Modificato: _existingImageUrls conterrà gli URL delle immagini esistenti dal DB
   final List<String> _existingImageUrls = [];
+
+  // NUOVO METODO: Funzione per pulire il percorso dell'immagine
+  String _sanitizeImagePath(String path) {
+    // Rimuove [" e "] all'inizio e alla fine e qualsiasi altra virgoletta doppia.
+    return path.replaceAll('["', '').replaceAll('"]', '').replaceAll('"', '');
+  }
 
   @override
   void initState() {
@@ -51,22 +53,23 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
       _category = widget.trip!.category;
       _notes = widget.trip!.notes;
       _isFavorite = widget.trip!.isFavorite;
-      _toBeRepeated = widget.trip!.toBeRepeated; // <--- CORRETTO
-      // Inizializza le immagini esistenti dal viaggio (sono già percorsi permanenti)
-      _existingImageUrls.addAll(widget.trip!.imageUrls);
+      _toBeRepeated = widget.trip!.toBeRepeated;
+      // Modificato: SANITIZZA I PERCORSI DELLE IMMAGINI ESISTENTI AL CARICAMENTO
+      for (String url in widget.trip!.imageUrls) {
+        _existingImageUrls.add(_sanitizeImagePath(url));
+      }
     } else {
       _title = '';
       _selectedContinent = AppData.continents.first;
       _selectedLocation = AppData
           .countriesByContinent[_selectedContinent]!
-          .first; // Assicurati che non sia vuoto
+          .first;
       _startDate = DateTime.now();
       _endDate = DateTime.now().add(const Duration(days: 7));
-      // Usa la prima categoria da AppData.categories
       _category = AppData.categories.first;
       _notes = '';
       _isFavorite = false;
-      _toBeRepeated = false; // <--- CORRETTO
+      _toBeRepeated = false;
     }
   }
 
@@ -96,7 +99,6 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
     });
   }
 
-  // --- METODO AGGIORNATO PER SELEZIONARE E COPIARE SUBITO LE IMMAGINI ---
   Future<void> _pickImage() async {
     final picker = ImagePicker();
     final pickedFiles = await picker.pickMultiImage(
@@ -105,7 +107,7 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
     );
 
     if (pickedFiles.isEmpty) {
-      return; // Nessuna immagine selezionata
+      return;
     }
 
     final appDir = await getApplicationDocumentsDirectory();
@@ -113,14 +115,12 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
       await appDir.create(recursive: true);
     }
 
-    List<String> tempSavedPaths =
-        []; // Per tenere traccia dei percorsi delle immagini appena salvate
+    List<String> tempSavedPaths = [];
 
     for (XFile xFile in pickedFiles) {
       try {
         final File imageFile = File(xFile.path);
 
-        // Controllo robusto: verifica che il file temporaneo esista prima di copiarlo
         if (!await imageFile.exists()) {
           print(
             'DEBUG - File temporaneo non trovato, potrebbe essere stato cancellato: ${imageFile.path}',
@@ -134,17 +134,16 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
               ),
             );
           }
-          continue; // Salta questo file e passa al successivo
+          continue;
         }
 
-        // Genera un nome di file univoco
         final String fileName =
             '${DateTime.now().microsecondsSinceEpoch}_${p.basename(imageFile.path)}';
         final String savedPath = p.join(appDir.path, fileName);
 
-        // Copia il file nella directory permanente dell'app
         final newFile = await imageFile.copy(savedPath);
-        tempSavedPaths.add(newFile.path); // Aggiungi il percorso permanente
+        // NON SANITIZZARE QUI, IL PATH È GIÀ CORRETTO DA ImagePicker E copy
+        tempSavedPaths.add(newFile.path);
         print('DEBUG - Immagine copiata e salvata in: ${newFile.path}');
       } catch (e) {
         print('Errore durante la copia dell\'immagine ${xFile.path}: $e');
@@ -159,27 +158,16 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
     }
 
     setState(() {
-      _newImagePaths.addAll(
-        tempSavedPaths,
-      ); // Aggiunge i percorsi delle nuove immagini già salvate
+      _newImagePaths.addAll(tempSavedPaths);
     });
   }
 
-  // Metodo per rimuovere un'immagine (sia nuova che esistente)
   void _removeImage(int index, {bool isExisting = false}) {
     setState(() {
       if (isExisting) {
-        // Rimuovi la dichiarazione della variabile, non è più necessaria
-        // final String imageUrlToRemove = _existingImageUrls[index]; // RIMUOVI QUESTA RIGA
         _existingImageUrls.removeAt(index);
-        // Assicurati che TUTTA la logica di eliminazione fisica sia rimossa o commentata
-        // (le righe che iniziavano con 'if (imageUrlToRemove.startsWith...')
       } else {
-        // Rimuovi la dichiarazione della variabile, non è più necessaria
-        // final String imagePathToRemove = _newImagePaths[index]; // RIMUOVI QUESTA RIGA
         _newImagePaths.removeAt(index);
-        // Assicurati che TUTTA la logica di eliminazione fisica sia rimossa o commentata
-        // (le righe che iniziavano con 'try { File(imagePathToRemove).deleteSync()...')
       }
     });
   }
@@ -188,11 +176,10 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
 
-      // Combina immagini esistenti e nuove immagini già salvate
+      // I percorsi sono già stati sanitizzati all'inizio (per existing)
+      // e sono già puliti da ImagePicker (per new)
       final List<String> allImageUrls = List.from(_existingImageUrls);
-      allImageUrls.addAll(
-        _newImagePaths,
-      ); // Aggiunge i percorsi permanenti delle nuove immagini
+      allImageUrls.addAll(_newImagePaths);
 
       final newTrip = Trip(
         id: widget.trip?.id,
@@ -203,10 +190,9 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
         endDate: _endDate,
         category: _category,
         notes: _notes,
-        imageUrls: allImageUrls, // Ora contiene solo percorsi permanenti
+        imageUrls: allImageUrls,
         isFavorite: _isFavorite,
-        toBeRepeated:
-            _toBeRepeated, // <--- CORRETTO: da _toRepeat a _toBeRepeated
+        toBeRepeated: _toBeRepeated,
       );
 
       print(
@@ -327,7 +313,10 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                     ),
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<String>(
-                        value: _selectedContinent,
+                        // MODIFICATO: Aggiungi un controllo per la validità del valore
+                        value: AppData.continents.contains(_selectedContinent)
+                            ? _selectedContinent
+                            : null, // Imposta a null se non trovato
                         dropdownColor: Colors.blue.shade700,
                         icon: const Icon(
                           Icons.arrow_drop_down,
@@ -505,7 +494,6 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Dropdown per la Categoria (ora usa AppData.categories)
                   InputDecorator(
                     decoration: InputDecoration(
                       labelText: 'Categoria',
@@ -540,7 +528,6 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                             _category = newValue!;
                           });
                         },
-                        // ***** USA AppData.categories QUI *****
                         items: AppData.categories.map<DropdownMenuItem<String>>(
                           (String value) {
                             return DropdownMenuItem<String>(
@@ -609,10 +596,10 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                       Icon(
                         _toBeRepeated
                             ? Icons.repeat_on
-                            : Icons.repeat, // <--- CORRETTO
+                            : Icons.repeat,
                         color: _toBeRepeated
                             ? Colors.greenAccent
-                            : Colors.white70, // <--- CORRETTO
+                            : Colors.white70,
                       ),
                       const SizedBox(width: 8),
                       Text(
@@ -622,10 +609,10 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                         ).textTheme.titleMedium?.copyWith(color: Colors.white),
                       ),
                       Switch(
-                        value: _toBeRepeated, // <--- CORRETTO
+                        value: _toBeRepeated,
                         onChanged: (bool value) {
                           setState(() {
-                            _toBeRepeated = value; // <--- CORRETTO
+                            _toBeRepeated = value;
                           });
                         },
                         activeColor: Colors.green,
@@ -652,7 +639,6 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                         ),
                         const SizedBox(height: 10),
 
-                        // Galleria di immagini ESISTENTI (se in modalità modifica)
                         if (_existingImageUrls.isNotEmpty) ...[
                           const Text(
                             'Foto già caricate:',
@@ -668,7 +654,9 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                               scrollDirection: Axis.horizontal,
                               itemCount: _existingImageUrls.length,
                               itemBuilder: (ctx, index) {
-                                final imageUrl = _existingImageUrls[index];
+                                // MODIFICATO: Sanitizza il percorso al momento della visualizzazione
+                                final String sanitizedImageUrl =
+                                    _sanitizeImagePath(_existingImageUrls[index]);
                                 return Padding(
                                   padding: const EdgeInsets.only(right: 8.0),
                                   child: Stack(
@@ -676,15 +664,14 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                                       ClipRRect(
                                         borderRadius: BorderRadius.circular(10),
                                         child: Image.file(
-                                          // Usa Image.file per percorsi locali
-                                          File(imageUrl),
+                                          File(sanitizedImageUrl), // Usa il percorso sanitizzato
                                           width: 100,
                                           height: 100,
                                           fit: BoxFit.cover,
                                           errorBuilder:
                                               (context, error, stackTrace) {
                                                 print(
-                                                  'DEBUG - Errore caricamento immagine esistente in anteprima: $imageUrl, Errore: $error',
+                                                  'DEBUG - Errore caricamento immagine esistente in anteprima: $sanitizedImageUrl, Errore: $error',
                                                 );
                                                 return Container(
                                                   width: 100,
@@ -727,7 +714,6 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                           const SizedBox(height: 10),
                         ],
 
-                        // Pulsante per aggiungere immagini
                         ElevatedButton.icon(
                           onPressed: _pickImage,
                           icon: const Icon(
@@ -751,7 +737,6 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                         ),
                         const SizedBox(height: 10),
 
-                        // Anteprime delle NUOVE immagini selezionate (già salvate temporaneamente)
                         if (_newImagePaths.isNotEmpty)
                           SizedBox(
                             height: 100,
@@ -759,8 +744,9 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                               scrollDirection: Axis.horizontal,
                               itemCount: _newImagePaths.length,
                               itemBuilder: (ctx, index) {
-                                final imageUrl =
-                                    _newImagePaths[index]; // Percorso dell'immagine
+                                // MODIFICATO: Sanitizza il percorso al momento della visualizzazione
+                                final String sanitizedImageUrl =
+                                    _sanitizeImagePath(_newImagePaths[index]);
                                 return Padding(
                                   padding: const EdgeInsets.only(right: 8.0),
                                   child: Stack(
@@ -768,16 +754,14 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                                       ClipRRect(
                                         borderRadius: BorderRadius.circular(10),
                                         child: Image.file(
-                                          File(
-                                            imageUrl,
-                                          ), // Visualizza il file locale
+                                          File(sanitizedImageUrl), // Usa il percorso sanitizzato
                                           width: 100,
                                           height: 100,
                                           fit: BoxFit.cover,
                                           errorBuilder:
                                               (context, error, stackTrace) {
                                                 print(
-                                                  'DEBUG - Errore caricamento nuova immagine in anteprima: $imageUrl, Errore: $error',
+                                                  'DEBUG - Errore caricamento nuova immagine in anteprima: $sanitizedImageUrl, Errore: $error',
                                                 );
                                                 return Container(
                                                   width: 100,
@@ -798,7 +782,7 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                                         child: GestureDetector(
                                           onTap: () => _removeImage(
                                             index,
-                                          ), // Rimuove dalla lista delle nuove
+                                          ),
                                           child: const CircleAvatar(
                                             radius: 12,
                                             backgroundColor: Colors.red,
@@ -816,7 +800,7 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                               },
                             ),
                           ),
-                        const SizedBox(height: 80), // Spazio per il FAB
+                        const SizedBox(height: 80),
                       ],
                     ),
                   ),

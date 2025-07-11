@@ -24,6 +24,12 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Trip> _trips = [];
   List<Trip> _favoriteTrips = [];
 
+  // NUOVO METODO: Funzione per pulire il percorso dell'immagine
+  String _sanitizeImagePath(String path) {
+    // Rimuove [" e "] all'inizio e alla fine e qualsiasi altra virgoletta doppia.
+    return path.replaceAll('["', '').replaceAll('"]', '').replaceAll('"', '');
+  }
+
   @override
   void initState() {
     super.initState();
@@ -47,10 +53,14 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // Helper per ottenere l'ImageProvider corretto, simile a TripDetailScreen
-  ImageProvider _getImageProvider(String imageUrl, String continent) {
+  ImageProvider _getImageProvider(String rawImageUrl, String continent) {
+    // MODIFICATO: Sanitizza il percorso prima di usarlo
+    final String imageUrl = _sanitizeImagePath(rawImageUrl);
+
     if (imageUrl.startsWith('assets/')) {
       return AssetImage(imageUrl);
     } else if (imageUrl.startsWith('/data/') ||
+        imageUrl.startsWith('/Users/') || // Aggiunto per coprire i percorsi assoluti
         imageUrl.startsWith('file://')) {
       final file = File(imageUrl.replaceFirst('file://', ''));
       if (file.existsSync()) {
@@ -482,7 +492,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _navigateToScreen(context, AddEditTripScreen()),
+        onPressed: () => _navigateToScreen(context, const AddEditTripScreen()), // MODIFICATO: Aggiunto 'const' se la schermata è const
         icon: const Icon(Icons.add),
         label: const Text('Aggiungi Viaggio'),
         backgroundColor: Colors.white,
