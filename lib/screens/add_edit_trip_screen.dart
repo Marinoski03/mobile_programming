@@ -39,15 +39,6 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
   // Modificato: _existingImageUrls conterrà gli URL delle immagini esistenti dal DB
   final List<String> _existingImageUrls = [];
 
-  final List<String> _categories = [
-    'Generale',
-    'Cultura',
-    'Natura',
-    'Relax',
-    'Avventura',
-    'Lavoro',
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -191,34 +182,6 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
         // (le righe che iniziavano con 'try { File(imagePathToRemove).deleteSync()...')
       }
     });
-  }
-
-  Future<void> _selectDate(BuildContext context, bool isStartDate) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: isStartDate ? _startDate : _endDate,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2101),
-    );
-    if (picked != null && picked != (isStartDate ? _startDate : _endDate)) {
-      setState(() {
-        if (isStartDate) {
-          _startDate = picked;
-          if (_startDate.isAfter(_endDate)) {
-            _endDate = _startDate.add(
-              const Duration(days: 7),
-            ); // Assicura che la data di fine sia dopo l'inizio
-          }
-        } else {
-          _endDate = picked;
-          if (_endDate.isBefore(_startDate)) {
-            _startDate = _endDate.subtract(
-              const Duration(days: 7),
-            ); // Assicura che la data di inizio sia prima della fine
-          }
-        }
-      });
-    }
   }
 
   void _saveTrip() async {
