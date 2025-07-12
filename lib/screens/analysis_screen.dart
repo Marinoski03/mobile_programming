@@ -216,8 +216,16 @@ class AnalysisScreen extends StatelessWidget {
 
   // Helper methods (_buildStatRow, _buildStatCard) come definiti in precedenza
   Widget _buildStatRow(BuildContext context, String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4.0),
+      padding: const EdgeInsets.all(12.0),
+      decoration: BoxDecoration(
+        color: Colors.blue.shade700.withOpacity(
+          0.4,
+        ), // Semi-transparent background
+        borderRadius: BorderRadius.circular(8.0),
+        border: Border.all(color: Colors.white.withOpacity(0.3)),
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -243,9 +251,11 @@ class AnalysisScreen extends StatelessWidget {
 
   Widget _buildStatCard(BuildContext context, String label, String value) {
     return Card(
-      color: Colors.white.withOpacity(0.1),
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      margin:
+          EdgeInsets.zero, // Remove default card margin to control with padding
+      color: Colors.white.withOpacity(0.15), // Semi-transparent card background
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.0)),
+      elevation: 5,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Row(
