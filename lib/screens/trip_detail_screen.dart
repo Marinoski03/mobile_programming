@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'dart:io'; // Per File (necessario per Image.file se mostri immagini locali)
-import 'package:cached_network_image/cached_network_image.dart'; // NUOVO: Import per gestire immagini di rete
+import 'package:cached_network_image/cached_network_image.dart'; // Import per gestire immagini di rete
 
 import '../models/trip.dart';
 import '../helpers/trip_database_helper.dart';
@@ -20,8 +20,7 @@ class TripDetailScreen extends StatefulWidget {
 
 class _TripDetailScreenState extends State<TripDetailScreen> {
   late Trip _currentTrip;
-  late String
-  _coverImageUrl; // Variabile per memorizzare l'URL dell'immagine di copertina
+  late String _coverImageUrl; // Variabile per memorizzare l'URL dell'immagine di copertina
 
   @override
   void initState() {
@@ -34,13 +33,14 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
   // Metodo per impostare l'immagine di copertina, inclusi i casi di fallback
   void _setCoverImage() {
     if (_currentTrip.imageUrls.isNotEmpty) {
-      // Se ci sono URL di immagini nel viaggio, prendi la prima come copertina
-      // SANITIZZA IL PERCORSO QUI ANCHE PER LA COPERTINA
       _coverImageUrl = _sanitizeImagePath(_currentTrip.imageUrls.first);
+    } else {
+      // Imposta un'immagine di fallback se non ci sono URL
+      _coverImageUrl = 'assets/images/default_trip_cover.png'; // Assicurati che questo percorso esista!
     }
   }
 
-  // NUOVO METODO: Funzione per pulire il percorso dell'immagine
+  // Funzione per pulire il percorso dell'immagine
   String _sanitizeImagePath(String path) {
     // Rimuove [" e "] all'inizio e alla fine e qualsiasi altra virgoletta doppia.
     return path.replaceAll('["', '').replaceAll('"]', '').replaceAll('"', '');
@@ -52,16 +52,15 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
       final updatedTrip = await TripDatabaseHelper.instance.getTripById(
         _currentTrip.id!,
       );
-      if (mounted) {
-        // Manteniamo mounted per sicurezza
+      if (mounted) { // Corretto: usa 'mounted' direttamente
         setState(() {
           _currentTrip = updatedTrip;
           _setCoverImage(); // Aggiorna l'immagine di copertina dopo il refresh
         });
       }
     } catch (e) {
-      print('Errore durante il ricaricamento del viaggio: $e');
-      if (mounted) {
+      debugPrint('Errore durante il ricaricamento del viaggio: $e');
+      if (mounted) { // Corretto: usa 'mounted' direttamente
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Impossibile ricaricare i dettagli del viaggio: $e'),
@@ -98,14 +97,14 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
     if (confirmed == true) {
       try {
         await TripDatabaseHelper.instance.deleteTrip(_currentTrip.id!);
-        if (mounted) {
+        if (mounted) { // Corretto: usa 'mounted' direttamente
           Navigator.of(
             context,
           ).pop(true); // Indica che il viaggio è stato eliminato
         }
       } catch (e) {
-        print('Errore durante l\'eliminazione del viaggio: $e');
-        if (mounted) {
+        debugPrint('Errore durante l\'eliminazione del viaggio: $e');
+        if (mounted) { // Corretto: usa 'mounted' direttamente
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Errore durante l\'eliminazione: $e')),
           );
@@ -122,7 +121,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
       ),
     );
 
-    if (updatedTrip != null && mounted) {
+    if (updatedTrip != null && mounted) { // Corretto: usa 'mounted' direttamente
       setState(() {
         _currentTrip = updatedTrip as Trip; // Assicurati il tipo
         _setCoverImage(); // Aggiorna l'immagine di copertina
@@ -165,7 +164,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                   _currentTrip = updatedTrip;
                 });
               } catch (e) {
-                print('Errore nell\'aggiornare lo stato di preferito: $e');
+                debugPrint('Errore nell\'aggiornare lo stato di preferito: $e');
               }
             },
           ),
@@ -362,7 +361,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                                       height: 120,
                                       fit: BoxFit.cover,
                                       errorBuilder: (context, error, stackTrace) {
-                                        print(
+                                        debugPrint(
                                           'Errore caricamento asset galleria: $imageUrl, Errore: $error',
                                         );
                                         return _buildGalleryErrorPlaceholder();
@@ -380,7 +379,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                                             child: CircularProgressIndicator(),
                                           ),
                                       errorWidget: (context, url, error) {
-                                        print(
+                                        debugPrint(
                                           'Errore caricamento network galleria: $url, Errore: $error',
                                         );
                                         return _buildGalleryErrorPlaceholder();
@@ -395,7 +394,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                                             ConnectionState.done) {
                                           if (snapshot.hasError ||
                                               !(snapshot.data ?? false)) {
-                                            print(
+                                            debugPrint(
                                               'Errore caricamento file locale galleria: $imageUrl, Errore: ${snapshot.error ?? "File non trovato"}',
                                             );
                                             return _buildGalleryErrorPlaceholder();
@@ -407,7 +406,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                                               fit: BoxFit.cover,
                                               errorBuilder:
                                                   (context, error, stackTrace) {
-                                                    print(
+                                                    debugPrint(
                                                       'Errore caricamento Image.file galleria: $imageUrl, Errore: $error',
                                                     );
                                                     return _buildGalleryErrorPlaceholder();
@@ -449,14 +448,14 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
     );
   }
 
-  // NUOVO METODO: Per gestire i diversi tipi di URL per l'immagine di copertina
+  // Per gestire i diversi tipi di URL per l'immagine di copertina
   Widget _buildCoverImageWidget(String imageUrl) {
     if (imageUrl.startsWith('assets/')) {
       return Image.asset(
         imageUrl,
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) {
-          print(
+          debugPrint(
             'Errore caricamento asset copertina: $imageUrl, Errore: $error',
           );
           return _buildErrorPlaceholder();
@@ -470,7 +469,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
         placeholder: (context, url) =>
             const Center(child: CircularProgressIndicator()),
         errorWidget: (context, url, error) {
-          print('Errore caricamento network copertina: $url, Errore: $error');
+          debugPrint('Errore caricamento network copertina: $url, Errore: $error');
           return _buildErrorPlaceholder();
         },
       );
@@ -483,7 +482,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
           if (snapshot.connectionState == ConnectionState.done) {
             if (snapshot.hasError || !(snapshot.data ?? false)) {
               // Il file non esiste o c'è stato un errore
-              print(
+              debugPrint(
                 'Errore caricamento file locale copertina: $imageUrl, Errore: ${snapshot.error ?? "File non trovato"}',
               );
               return _buildErrorPlaceholder();
@@ -493,7 +492,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                 File(imageUrl),
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
-                  print(
+                  debugPrint(
                     'Errore caricamento Image.file copertina: $imageUrl, Errore: $error',
                   );
                   return _buildErrorPlaceholder();

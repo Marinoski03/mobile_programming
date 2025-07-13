@@ -58,8 +58,9 @@ class _SearchScreenState extends State<SearchScreen> {
     });
     try {
       final allTrips = await TripDatabaseHelper.instance.getAllTrips();
+      // MODIFICA 1: Applica .trim() alla categoria quando la estrai
       final uniqueCategories = allTrips
-          .map((trip) => trip.category)
+          .map((trip) => trip.category.trim())
           .toSet()
           .toList();
       uniqueCategories.sort();
@@ -69,9 +70,15 @@ class _SearchScreenState extends State<SearchScreen> {
         _categories.add('Tutte');
         _categories.addAll(uniqueCategories);
 
-        if (widget.initialCategory != null &&
-            _categories.contains(widget.initialCategory)) {
-          _selectedCategoryFilter = widget.initialCategory!;
+        if (widget.initialCategory != null) {
+          // MODIFICA 2: Applica .trim() anche a widget.initialCategory
+          final sanitizedInitialCategory = widget.initialCategory!.trim();
+          if (_categories.contains(sanitizedInitialCategory)) {
+            _selectedCategoryFilter = sanitizedInitialCategory;
+          } else {
+            // Fallback se initialCategory non è trovato nella lista pulita
+            _selectedCategoryFilter = 'Tutte';
+          }
         } else {
           _selectedCategoryFilter = 'Tutte';
         }
@@ -100,10 +107,11 @@ class _SearchScreenState extends State<SearchScreen> {
         final matchesTitle = trip.title.toLowerCase().contains(query);
         final matchesLocation = trip.location.toLowerCase().contains(query);
 
+        // MODIFICA 4: Assicurati che il confronto sia robusto anche qui
         final matchesCategory =
             _selectedCategoryFilter == 'Tutte' ||
-            trip.category.toLowerCase() ==
-                _selectedCategoryFilter.toLowerCase();
+            trip.category.trim().toLowerCase() ==
+                _selectedCategoryFilter.trim().toLowerCase();
 
         final matchesStartDate =
             _startDateFilter == null ||
@@ -308,7 +316,8 @@ class _SearchScreenState extends State<SearchScreen> {
                                     _cardBackgroundColor, // Background of dropdown menu
                                 items: _categories.map((String category) {
                                   return DropdownMenuItem<String>(
-                                    value: category,
+                                    // MODIFICA 3: Assicurati che il valore del DropdownMenuItem sia pulito
+                                    value: category.trim(),
                                     child: Text(
                                       category,
                                       style: const TextStyle(
@@ -319,7 +328,8 @@ class _SearchScreenState extends State<SearchScreen> {
                                 }).toList(),
                                 onChanged: (String? newValue) {
                                   setState(() {
-                                    _selectedCategoryFilter = newValue!;
+                                    // MODIFICA 5: Assicurati che _selectedCategoryFilter sia pulito
+                                    _selectedCategoryFilter = newValue!.trim();
                                     _performSearch();
                                   });
                                 },
