@@ -12,7 +12,7 @@ import 'analysis_screen.dart';
 import 'categories_screen.dart';
 import 'search_screen.dart';
 import 'trip_detail_screen.dart';
-import '../utils/app_data.dart'; // Importa AppData per i colori
+import '../utils/app_data.dart'; 
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -51,7 +51,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return path.replaceAll('["', '').replaceAll('"]', '').replaceAll('"', '');
   }
 
-  // Widget per costruire l'immagine (adattato da trip_detail_screen.dart)
   Widget _buildImageWidget(String imageUrl, {double? width, double? height, BoxFit? fit, BorderRadius? borderRadius}) {
     Widget imageWidget;
     if (imageUrl.startsWith('assets/')) {
@@ -111,7 +110,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return imageWidget;
   }
 
-  // Placeholder di errore generale
   Widget _buildErrorPlaceholder({double? width, double? height}) {
     return Container(
       width: width,
@@ -130,25 +128,25 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text(
           'I Miei Viaggi',
           style: TextStyle(
-              color: AppData.antiFlashWhite), // Colore del testo aggiornato
+              color: AppData.antiFlashWhite), 
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
           IconButton(
             icon: const Icon(Icons.category,
-                color: AppData.antiFlashWhite), // Colore icona aggiornato
+                color: AppData.antiFlashWhite), 
             onPressed: () =>
                 _navigateToScreen(context, const CategoriesScreen()),
           ),
           IconButton(
             icon: const Icon(Icons.search,
-                color: AppData.antiFlashWhite), // Colore icona aggiornato
+                color: AppData.antiFlashWhite), 
             onPressed: () => _navigateToScreen(context, const SearchScreen()),
           ),
           IconButton(
             icon: const Icon(Icons.bar_chart,
-                color: AppData.antiFlashWhite), // Colore icona aggiornato
+                color: AppData.antiFlashWhite), 
             onPressed: () => _navigateToScreen(context, const AnalysisScreen()),
           ),
         ],
@@ -157,7 +155,6 @@ class _HomeScreenState extends State<HomeScreen> {
         width: double.infinity,
         height: double.infinity,
         decoration: BoxDecoration(
-          // Gradiente con colori AppData
           gradient: LinearGradient(
             colors: [
               AppData.silverLakeBlue.withOpacity(0.7),
@@ -177,7 +174,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       textAlign: TextAlign.center,
                       style: TextStyle(
                           color: AppData.antiFlashWhite
-                              .withOpacity(0.7)), // Colore testo aggiornato
+                              .withOpacity(0.7)), 
                     ),
                   ),
                 )
@@ -191,7 +188,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         style: Theme.of(context).textTheme.headlineSmall
                             ?.copyWith(
                               fontWeight: FontWeight.bold,
-                              color: AppData.antiFlashWhite, // Colore testo aggiornato
+                              color: AppData.antiFlashWhite, 
                             ),
                       ),
                       const SizedBox(height: 10),
@@ -201,7 +198,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 'Nessun viaggio trovato.',
                                 style: TextStyle(
                                     color: AppData.antiFlashWhite
-                                        .withOpacity(0.7)), // Colore testo aggiornato
+                                        .withOpacity(0.7)), 
                               ),
                             )
                           : ListView.builder(
@@ -212,10 +209,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                 final trip = _trips[index];
                                 final String coverImageUrl = trip.imageUrls.isNotEmpty
                                     ? _sanitizeImagePath(trip.imageUrls.first)
-                                    : 'assets/images/default_trip_cover.png'; // Fallback
+                                    : 'assets/images/default_trip_cover.png'; 
 
                                 return Card(
-                                  // Colore Card aggiornato
                                   color: AppData.antiFlashWhite,
                                   margin: const EdgeInsets.symmetric(
                                     vertical: 8.0,
@@ -236,9 +232,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                           width: 100,
                                           height: 100,
                                           fit: BoxFit.cover,
-                                          borderRadius: BorderRadius.circular(8.0), // Applica bordo rotondo all'immagine
+                                          borderRadius: BorderRadius.circular(8.0), 
                                         ),
-                                        const SizedBox(width: 12), // Spazio tra immagine e testo
+                                        const SizedBox(width: 12), 
 
                                         Expanded(
                                           child: Padding(
@@ -256,12 +252,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                                         fontWeight:
                                                             FontWeight.bold,
                                                         color: AppData
-                                                            .charcoal, // Colore testo aggiornato
+                                                            .charcoal, 
                                                       ),
                                                   maxLines:
-                                                      1, // Limita a una riga
+                                                      1, 
                                                   overflow: TextOverflow
-                                                      .ellipsis, // Aggiunge "..."
+                                                      .ellipsis, 
                                                 ),
                                                 const SizedBox(height: 4),
                                                 Text(
@@ -272,7 +268,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                       ?.copyWith(
                                                           color: AppData.charcoal
                                                               .withOpacity(
-                                                                  0.8)), // Colore testo aggiornato
+                                                                  0.8)), 
                                                   maxLines: 1,
                                                   overflow:
                                                       TextOverflow.ellipsis,
@@ -284,7 +280,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                     context,
                                                   ).textTheme.bodyMedium?.copyWith(
                                                       color: AppData
-                                                          .silverLakeBlue), // Colore testo aggiornato
+                                                          .silverLakeBlue), 
                                                 ),
                                                 if (trip.isFavorite ||
                                                     trip.toBeRepeated)
@@ -316,7 +312,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                                 const Icon(
                                                                   Icons.star,
                                                                   color: AppData
-                                                                      .antiFlashWhite, // Colore icona aggiornato
+                                                                      .antiFlashWhite, 
                                                                   size: 16,
                                                                 ),
                                                                 const SizedBox(
@@ -330,7 +326,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                                       .bodySmall
                                                                       ?.copyWith(
                                                                         color: AppData
-                                                                            .antiFlashWhite, // Colore testo badge aggiornato
+                                                                            .antiFlashWhite, 
                                                                       ),
                                                                 ),
                                                               ],
@@ -360,7 +356,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                                 const Icon(
                                                                   Icons.repeat,
                                                                   color: AppData
-                                                                      .antiFlashWhite, // Colore icona aggiornato
+                                                                      .antiFlashWhite, 
                                                                   size: 16,
                                                                 ),
                                                                 const SizedBox(
@@ -374,7 +370,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                                       .bodySmall
                                                                       ?.copyWith(
                                                                         color: AppData
-                                                                            .antiFlashWhite, // Colore testo badge aggiornato
+                                                                            .antiFlashWhite, 
                                                                       ),
                                                                 ),
                                                               ],
@@ -399,7 +395,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         style: Theme.of(context).textTheme.headlineSmall
                             ?.copyWith(
                               fontWeight: FontWeight.bold,
-                              color: AppData.antiFlashWhite, // Colore testo aggiornato
+                              color: AppData.antiFlashWhite, 
                             ),
                       ),
                       const SizedBox(height: 10),
@@ -409,7 +405,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 'Nessuna destinazione preferita ancora. Aggiungi un viaggio ai preferiti!',
                                 style: TextStyle(
                                     color: AppData.antiFlashWhite
-                                        .withOpacity(0.7)), // Colore testo aggiornato
+                                        .withOpacity(0.7)), 
                               ),
                             )
                           : SizedBox(
@@ -421,7 +417,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   final trip = _favoriteTrips[index];
                                   final String coverImageUrl = trip.imageUrls.isNotEmpty
                                       ? _sanitizeImagePath(trip.imageUrls.first)
-                                      : 'assets/images/default_trip_cover.png'; // Fallback
+                                      : 'assets/images/default_trip_cover.png'; 
 
                                   return GestureDetector(
                                     onTap: () => _navigateToScreen(
@@ -433,12 +429,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                       margin:
                                           const EdgeInsets.only(right: 15),
                                       decoration: BoxDecoration(
-                                        // Colore sfondo card preferiti aggiornato
                                         color: AppData.antiFlashWhite,
                                         borderRadius: BorderRadius.circular(12),
                                         boxShadow: [
                                           BoxShadow(
-                                            // Colore ombra aggiornato
                                             color: AppData.charcoal.withOpacity(0.3),
                                             spreadRadius: 2,
                                             blurRadius: 5,
@@ -446,18 +440,18 @@ class _HomeScreenState extends State<HomeScreen> {
                                           ),
                                         ],
                                       ),
-                                      child: Column( // Questo è il Column per l'elemento
+                                      child: Column( 
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
                                           _buildImageWidget(
                                             coverImageUrl,
-                                            width: double.infinity, // Prende tutta la larghezza del contenitore
-                                            height: 100, // Altezza fissa per l'immagine
+                                            width: double.infinity, 
+                                            height: 100, 
                                             fit: BoxFit.cover,
-                                            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)), // Bordo rotondo solo in alto
+                                            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)), 
                                           ),
-                                          Padding( // Padding esistente per il contenuto testuale
+                                          Padding( 
                                             padding: const EdgeInsets.all(8.0),
                                             child: Column(
                                               crossAxisAlignment:
@@ -467,7 +461,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                   trip.title,
                                                   style: const TextStyle(
                                                     fontWeight: FontWeight.bold,
-                                                    color: AppData.charcoal, // Colore testo aggiornato
+                                                    color: AppData.charcoal, 
                                                   ),
                                                   maxLines: 1,
                                                   overflow:
@@ -477,7 +471,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 Text(
                                                   trip.location,
                                                   style: TextStyle(
-                                                    color: AppData.charcoal.withOpacity(0.6), // Colore testo aggiornato
+                                                    color: AppData.charcoal.withOpacity(0.6), 
                                                     fontSize: 12,
                                                   ),
                                                   maxLines: 1,

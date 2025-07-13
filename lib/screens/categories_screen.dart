@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import '../helpers/trip_database_helper.dart';
 import 'package:travel_diary_app/screens/search_screen.dart';
-import '../utils/app_data.dart'; // Importa AppData per i colori
+import '../utils/app_data.dart'; 
 
 class CategoriesScreen extends StatefulWidget {
   const CategoriesScreen({super.key});
@@ -13,7 +13,6 @@ class CategoriesScreen extends StatefulWidget {
 }
 
 class _CategoriesScreenState extends State<CategoriesScreen> {
-  // Rimosse le definizioni di colore locali, useremo direttamente AppData
 
   Map<String, int> _categoryCounts = {};
   late Future<void> _loadCategoriesFuture;
@@ -49,14 +48,14 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         title: const Text(
           'Categorie Viaggi',
           style: TextStyle(
-            color: _textColorOnGradient, // Text color on gradient background
+            color: _textColorOnGradient, 
             fontWeight: FontWeight.bold,
           ),
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            color: _textColorOnGradient, // Icon color to match text
+            color: _textColorOnGradient, 
             onPressed: () {
               setState(() {
                 _loadCategoriesFuture = _loadCategoryCounts();
@@ -71,7 +70,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         height: double.infinity,
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            // Using blue shades similar to HomeScreen
             colors: [_gradientStartColor, _gradientEndColor],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -83,7 +81,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(
-                  // Use _textColorOnGradient for loading indicator on dark gradient
                   child: CircularProgressIndicator(
                     valueColor:
                     AlwaysStoppedAnimation<Color>(_textColorOnGradient),
@@ -96,7 +93,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   child: Text(
                     'Errore nel caricamento delle categorie: ${snapshot.error}',
                     style: const TextStyle(
-                        color: _textColorOnGradient), // Error text in white
+                        color: _textColorOnGradient), 
                   ),
                 );
               }
@@ -111,7 +108,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                       style: Theme.of(context).textTheme.headlineSmall
                           ?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: _textColorOnGradient, // Header text in white
+                        color: _textColorOnGradient, 
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -124,7 +121,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                           textAlign: TextAlign.center,
                           style: TextStyle(
                               color:
-                              _textColorOnGradient), // Empty state text in white
+                              _textColorOnGradient), 
                         ),
                       ),
                     )
@@ -138,31 +135,30 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                           );
                           final count = _categoryCounts[category];
                           return Card(
-                            // Card background remains Anti-flash White for contrast
                             color: _cardBackgroundColor,
                             margin: const EdgeInsets.symmetric(
                                 vertical: 8.0),
                             elevation: 4,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12), // Adjusted to 12
+                              borderRadius: BorderRadius.circular(12), 
                               side: BorderSide(
-                                  color: Colors.blue.shade200, // Light blue border
+                                  color: Colors.blue.shade200, 
                                   width: 1),
                             ),
                             child: ListTile(
                               leading: const Icon(Icons.folder_open,
-                                  color: _iconColor), // Dark blue for icon
+                                  color: _iconColor), 
                               title: Text(
                                 category,
                                 style: const TextStyle(
-                                  color: _textColorOnCard, // Dark text for title
+                                  color: _textColorOnCard, 
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                               trailing: Text(
                                 '$count viaggi',
                                 style: TextStyle(
-                                  color: _iconColor, // Dark blue for count text
+                                  color: _iconColor, 
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
