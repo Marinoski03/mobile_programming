@@ -2,6 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'dart:io'; // Necessario per File().exists()
+import 'package:cached_network_image/cached_network_image.dart'; // Necessario per immagini di rete
 
 import '../models/trip.dart';
 import '../helpers/trip_database_helper.dart';
@@ -45,7 +47,83 @@ class _HomeScreenState extends State<HomeScreen> {
     _refreshTrips(); // Aggiorna i viaggi dopo essere tornato da una schermata
   }
 
-  // Helper per ottenere l'ImageProvider corretto, simile a TripDetailScreen
+  // Funzione per pulire il percorso dell'immagine (copia da trip_detail_screen.dart)
+  String _sanitizeImagePath(String path) {
+    return path.replaceAll('["', '').replaceAll('"]', '').replaceAll('"', '');
+  }
+
+  // Widget per costruire l'immagine (adattato da trip_detail_screen.dart)
+  Widget _buildImageWidget(String imageUrl, {double? width, double? height, BoxFit? fit, BorderRadius? borderRadius}) {
+    Widget imageWidget;
+    if (imageUrl.startsWith('assets/')) {
+      imageWidget = Image.asset(
+        imageUrl,
+        width: width,
+        height: height,
+        fit: fit ?? BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          debugPrint('Errore caricamento asset: $imageUrl, Errore: $error');
+          return _buildErrorPlaceholder(width: width, height: height);
+        },
+      );
+    } else if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      imageWidget = CachedNetworkImage(
+        imageUrl: imageUrl,
+        width: width,
+        height: height,
+        fit: fit ?? BoxFit.cover,
+        placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+        errorWidget: (context, url, error) {
+          debugPrint('Errore caricamento network: $url, Errore: $error');
+          return _buildErrorPlaceholder(width: width, height: height);
+        },
+      );
+    } else {
+      // Consideriamo che sia un percorso di file locale
+      imageWidget = FutureBuilder<bool>(
+        future: File(imageUrl).exists(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            if (snapshot.hasError || !(snapshot.data ?? false)) {
+              debugPrint('Errore caricamento file locale: $imageUrl, Errore: ${snapshot.error ?? "File non trovato"}');
+              return _buildErrorPlaceholder(width: width, height: height);
+            } else {
+              return Image.file(
+                File(imageUrl),
+                width: width,
+                height: height,
+                fit: fit ?? BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  debugPrint('Errore caricamento Image.file: $imageUrl, Errore: $error');
+                  return _buildErrorPlaceholder(width: width, height: height);
+                },
+              );
+            }
+          }
+          return const Center(child: CircularProgressIndicator());
+        },
+      );
+    }
+
+    // Applica il borderRadius se fornito
+    if (borderRadius != null) {
+      return ClipRRect(
+        borderRadius: borderRadius,
+        child: imageWidget,
+      );
+    }
+    return imageWidget;
+  }
+
+  // Placeholder di errore generale
+  Widget _buildErrorPlaceholder({double? width, double? height}) {
+    return Container(
+      width: width,
+      height: height,
+      color: Colors.grey[300],
+      child: Icon(Icons.image_not_supported, color: Colors.grey[600], size: (width ?? 50) / 2),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -126,6 +204,10 @@ class _HomeScreenState extends State<HomeScreen> {
                               itemCount: _trips.length > 3 ? 3 : _trips.length,
                               itemBuilder: (context, index) {
                                 final trip = _trips[index];
+                                final String coverImageUrl = trip.imageUrls.isNotEmpty
+                                    ? _sanitizeImagePath(trip.imageUrls.first)
+                                    : 'assets/images/default_trip_cover.png'; // Fallback
+
                                 return Card(
                                   margin: const EdgeInsets.symmetric(
                                     vertical: 8.0,
@@ -140,11 +222,19 @@ class _HomeScreenState extends State<HomeScreen> {
                                       TripDetailScreen(trip: trip),
                                     ),
                                     child: Row(
-                                      // Usa una Row per l'immagine a sinistra e il testo a destra
                                       children: [
+                                        // Immagine a sinistra
+                                        _buildImageWidget(
+                                          coverImageUrl,
+                                          width: 100,
+                                          height: 100,
+                                          fit: BoxFit.cover,
+                                          borderRadius: BorderRadius.circular(8.0), // Applica bordo rotondo all'immagine
+                                        ),
+                                        const SizedBox(width: 12), // Spazio tra immagine e testo
+
                                         // Sezione Contenuto Testuale
                                         Expanded(
-                                          // Permette alla colonna del testo di occupare lo spazio rimanente
                                           child: Padding(
                                             padding: const EdgeInsets.all(12.0),
                                             child: Column(
@@ -184,12 +274,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 ),
                                                 // *** INIZIO MODIFICA: AGGIUNTA BADGE ***
                                                 if (trip.isFavorite ||
-                                                    trip.toBeRepeated) // Mostra questa riga solo se almeno una condizione è vera
+                                                    trip.toBeRepeated)
                                                   Padding(
                                                     padding:
                                                         const EdgeInsets.only(
                                                           top: 8.0,
-                                                        ), // Spazio sopra i badge
+                                                        ),
                                                     child: Row(
                                                       children: [
                                                         if (trip.isFavorite)
@@ -202,7 +292,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                             decoration: BoxDecoration(
                                                               color: Colors
                                                                   .amber
-                                                                  .shade700, // Colore per "Preferito"
+                                                                  .shade700,
                                                               borderRadius:
                                                                   BorderRadius.circular(
                                                                     15,
@@ -234,7 +324,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                           ),
                                                         const SizedBox(
                                                           width: 8,
-                                                        ), // Spazio tra i badge
+                                                        ),
                                                         if (trip.toBeRepeated)
                                                           Container(
                                                             padding:
@@ -245,7 +335,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                             decoration: BoxDecoration(
                                                               color: Colors
                                                                   .green
-                                                                  .shade700, // Colore per "Da ripetere"
+                                                                  .shade700,
                                                               borderRadius:
                                                                   BorderRadius.circular(
                                                                     15,
@@ -314,6 +404,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                 itemCount: _favoriteTrips.length,
                                 itemBuilder: (context, index) {
                                   final trip = _favoriteTrips[index];
+                                  final String coverImageUrl = trip.imageUrls.isNotEmpty
+                                      ? _sanitizeImagePath(trip.imageUrls.first)
+                                      : 'assets/images/default_trip_cover.png'; // Fallback
 
                                   return GestureDetector(
                                     onTap: () => _navigateToScreen(
@@ -335,11 +428,19 @@ class _HomeScreenState extends State<HomeScreen> {
                                           ),
                                         ],
                                       ),
-                                      child: Column(
+                                      child: Column( // Questo è il Column per l'elemento
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          Padding(
+                                          // Immagine in cima
+                                          _buildImageWidget(
+                                            coverImageUrl,
+                                            width: double.infinity, // Prende tutta la larghezza del contenitore
+                                            height: 100, // Altezza fissa per l'immagine
+                                            fit: BoxFit.cover,
+                                            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)), // Bordo rotondo solo in alto
+                                          ),
+                                          Padding( // Padding esistente per il contenuto testuale
                                             padding: const EdgeInsets.all(8.0),
                                             child: Column(
                                               crossAxisAlignment:
@@ -385,7 +486,7 @@ class _HomeScreenState extends State<HomeScreen> {
         onPressed: () => _navigateToScreen(
           context,
           const AddEditTripScreen(),
-        ), // MODIFICATO: Aggiunto 'const' se la schermata è const
+        ),
         icon: const Icon(Icons.add),
         label: const Text('Aggiungi Viaggio'),
         backgroundColor: Colors.white,
@@ -394,6 +495,4 @@ class _HomeScreenState extends State<HomeScreen> {
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
-
-  // Modifica qui: aggiungi parametri opzionali per altezza e larghezza
 }
