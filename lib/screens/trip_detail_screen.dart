@@ -8,7 +8,6 @@ import 'package:cached_network_image/cached_network_image.dart'; // NUOVO: Impor
 import '../models/trip.dart';
 import '../helpers/trip_database_helper.dart';
 import 'add_edit_trip_screen.dart'; // Per la navigazione alla schermata di modifica
-import '../utils/app_data.dart'; // Per AppData.continentImages
 
 class TripDetailScreen extends StatefulWidget {
   final Trip trip;
@@ -21,7 +20,8 @@ class TripDetailScreen extends StatefulWidget {
 
 class _TripDetailScreenState extends State<TripDetailScreen> {
   late Trip _currentTrip;
-  late String _coverImageUrl; // Variabile per memorizzare l'URL dell'immagine di copertina
+  late String
+  _coverImageUrl; // Variabile per memorizzare l'URL dell'immagine di copertina
 
   @override
   void initState() {
@@ -37,11 +37,6 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
       // Se ci sono URL di immagini nel viaggio, prendi la prima come copertina
       // SANITIZZA IL PERCORSO QUI ANCHE PER LA COPERTINA
       _coverImageUrl = _sanitizeImagePath(_currentTrip.imageUrls.first);
-    } else {
-      // Altrimenti, usa l'immagine di default basata sul continente o l'immagine "Generale"
-      _coverImageUrl =
-          AppData.continentImages[_currentTrip.continent] ??
-          AppData.continentImages['Generale']!;
     }
   }
 
@@ -104,7 +99,9 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
       try {
         await TripDatabaseHelper.instance.deleteTrip(_currentTrip.id!);
         if (mounted) {
-          Navigator.of(context).pop(true); // Indica che il viaggio è stato eliminato
+          Navigator.of(
+            context,
+          ).pop(true); // Indica che il viaggio è stato eliminato
         }
       } catch (e) {
         print('Errore durante l\'eliminazione del viaggio: $e');
@@ -215,12 +212,15 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                       ),
                     ],
                   ),
-                  child: ClipRRect( // Aggiunto ClipRRect per applicare il border radius all'immagine stessa
+                  child: ClipRRect(
+                    // Aggiunto ClipRRect per applicare il border radius all'immagine stessa
                     borderRadius: const BorderRadius.only(
                       bottomLeft: Radius.circular(20),
                       bottomRight: Radius.circular(20),
                     ),
-                    child: _buildCoverImageWidget(_coverImageUrl), // Usa il nuovo metodo di costruzione
+                    child: _buildCoverImageWidget(
+                      _coverImageUrl,
+                    ), // Usa il nuovo metodo di costruzione
                   ),
                 ),
                 Padding(
@@ -347,9 +347,12 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                                 scrollDirection: Axis.horizontal,
                                 itemCount: _currentTrip.imageUrls.length,
                                 itemBuilder: (ctx, index) {
-                                  final String rawImageUrl = _currentTrip.imageUrls[index];
+                                  final String rawImageUrl =
+                                      _currentTrip.imageUrls[index];
                                   // SANITIZZA IL PERCORSO QUI
-                                  final String imageUrl = _sanitizeImagePath(rawImageUrl);
+                                  final String imageUrl = _sanitizeImagePath(
+                                    rawImageUrl,
+                                  );
 
                                   Widget imageWidget;
                                   if (imageUrl.startsWith('assets/')) {
@@ -372,9 +375,10 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                                       width: 120,
                                       height: 120,
                                       fit: BoxFit.cover,
-                                      placeholder: (context, url) => const Center(
-                                        child: CircularProgressIndicator(),
-                                      ),
+                                      placeholder: (context, url) =>
+                                          const Center(
+                                            child: CircularProgressIndicator(),
+                                          ),
                                       errorWidget: (context, url, error) {
                                         print(
                                           'Errore caricamento network galleria: $url, Errore: $error',
@@ -401,16 +405,19 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                                               width: 120,
                                               height: 120,
                                               fit: BoxFit.cover,
-                                              errorBuilder: (context, error, stackTrace) {
-                                                print(
-                                                  'Errore caricamento Image.file galleria: $imageUrl, Errore: $error',
-                                                );
-                                                return _buildGalleryErrorPlaceholder();
-                                              },
+                                              errorBuilder:
+                                                  (context, error, stackTrace) {
+                                                    print(
+                                                      'Errore caricamento Image.file galleria: $imageUrl, Errore: $error',
+                                                    );
+                                                    return _buildGalleryErrorPlaceholder();
+                                                  },
                                             );
                                           }
                                         }
-                                        return const Center(child: CircularProgressIndicator());
+                                        return const Center(
+                                          child: CircularProgressIndicator(),
+                                        );
                                       },
                                     );
                                   }
@@ -419,7 +426,8 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                                     padding: const EdgeInsets.only(right: 8.0),
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(10),
-                                      child: imageWidget, // Usa il widget creato dinamicamente
+                                      child:
+                                          imageWidget, // Usa il widget creato dinamicamente
                                     ),
                                   );
                                 },
@@ -448,11 +456,14 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
         imageUrl,
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) {
-          print('Errore caricamento asset copertina: $imageUrl, Errore: $error');
+          print(
+            'Errore caricamento asset copertina: $imageUrl, Errore: $error',
+          );
           return _buildErrorPlaceholder();
         },
       );
-    } else if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+    } else if (imageUrl.startsWith('http://') ||
+        imageUrl.startsWith('https://')) {
       return CachedNetworkImage(
         imageUrl: imageUrl,
         fit: BoxFit.cover,
@@ -472,7 +483,9 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
           if (snapshot.connectionState == ConnectionState.done) {
             if (snapshot.hasError || !(snapshot.data ?? false)) {
               // Il file non esiste o c'è stato un errore
-              print('Errore caricamento file locale copertina: $imageUrl, Errore: ${snapshot.error ?? "File non trovato"}');
+              print(
+                'Errore caricamento file locale copertina: $imageUrl, Errore: ${snapshot.error ?? "File non trovato"}',
+              );
               return _buildErrorPlaceholder();
             } else {
               // Il file esiste, caricalo
@@ -480,7 +493,9 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                 File(imageUrl),
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
-                  print('Errore caricamento Image.file copertina: $imageUrl, Errore: $error');
+                  print(
+                    'Errore caricamento Image.file copertina: $imageUrl, Errore: $error',
+                  );
                   return _buildErrorPlaceholder();
                 },
               );
@@ -520,11 +535,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
       width: 120,
       height: 120,
       color: Colors.grey[700],
-      child: const Icon(
-        Icons.broken_image,
-        color: Colors.white70,
-        size: 50,
-      ),
+      child: const Icon(Icons.broken_image, color: Colors.white70, size: 50),
     );
   }
 }

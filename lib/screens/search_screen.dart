@@ -3,11 +3,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:travel_diary_app/screens/trip_detail_screen.dart';
-import 'dart:io';
 
 import '../models/trip.dart';
 import '../helpers/trip_database_helper.dart';
-import '../utils/app_data.dart';
 
 class SearchScreen extends StatefulWidget {
   final String? initialCategory;
@@ -20,10 +18,17 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   // Define colors based on the home_screen palette
   static const Color _gradientStartColor = Colors.blue;
-  static const Color _gradientEndColor = Color.fromARGB(255, 13, 71, 161); // A darker blue for consistency
+  static const Color _gradientEndColor = Color.fromARGB(
+    255,
+    13,
+    71,
+    161,
+  ); // A darker blue for consistency
   static const Color _cardBackgroundColor = Colors.white;
-  static const Color _textColor = Colors.black87; // Darker text for readability on white cards
-  static const Color _lightTextColor = Colors.white70; // For text on gradient background
+  static const Color _textColor =
+      Colors.black87; // Darker text for readability on white cards
+  static const Color _lightTextColor =
+      Colors.white70; // For text on gradient background
 
   final TextEditingController _searchController = TextEditingController();
   String _selectedCategoryFilter = 'Tutte';
@@ -53,8 +58,10 @@ class _SearchScreenState extends State<SearchScreen> {
     });
     try {
       final allTrips = await TripDatabaseHelper.instance.getAllTrips();
-      final uniqueCategories =
-      allTrips.map((trip) => trip.category).toSet().toList();
+      final uniqueCategories = allTrips
+          .map((trip) => trip.category)
+          .toSet()
+          .toList();
       uniqueCategories.sort();
 
       setState(() {
@@ -93,14 +100,18 @@ class _SearchScreenState extends State<SearchScreen> {
         final matchesTitle = trip.title.toLowerCase().contains(query);
         final matchesLocation = trip.location.toLowerCase().contains(query);
 
-        final matchesCategory = _selectedCategoryFilter == 'Tutte' ||
-            trip.category.toLowerCase() == _selectedCategoryFilter.toLowerCase();
+        final matchesCategory =
+            _selectedCategoryFilter == 'Tutte' ||
+            trip.category.toLowerCase() ==
+                _selectedCategoryFilter.toLowerCase();
 
-        final matchesStartDate = _startDateFilter == null ||
+        final matchesStartDate =
+            _startDateFilter == null ||
             (trip.startDate.isAtSameMomentAs(_startDateFilter!) ||
                 trip.startDate.isAfter(_startDateFilter!));
 
-        final matchesEndDate = _endDateFilter == null ||
+        final matchesEndDate =
+            _endDateFilter == null ||
             (trip.endDate.isAtSameMomentAs(_endDateFilter!) ||
                 trip.endDate.isBefore(_endDateFilter!));
 
@@ -129,7 +140,8 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(
-                foregroundColor: _gradientEndColor, // Color of "OK", "CANCEL" buttons
+                foregroundColor:
+                    _gradientEndColor, // Color of "OK", "CANCEL" buttons
               ),
             ),
           ),
@@ -160,31 +172,6 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   // Helper per ottenere l'ImageProvider corretto, simile a TripDetailScreen e HomeScreen
-  ImageProvider _getImageProvider(String imageUrl, String continent) {
-    if (imageUrl.startsWith('assets/')) {
-      return AssetImage(imageUrl);
-    } else if (imageUrl.startsWith('/data/') || imageUrl.startsWith('file://')) {
-      final file = File(imageUrl.replaceFirst('file://', ''));
-      if (file.existsSync()) {
-        return FileImage(file);
-      } else {
-        print('DEBUG - SearchScreen: File immagine non trovato: $imageUrl');
-        // Fallback a immagine continente o default se il file non esiste
-        return AssetImage(
-          AppData.continentImages[continent] ??
-              AppData.continentImages['Generale'] ??
-              'assets/images/default_trip.jpg',
-        );
-      }
-    } else {
-      // Per ogni altro caso (es. URL web se mai supportati, ma ora fallback a asset)
-      return AssetImage(
-        AppData.continentImages[continent] ??
-            AppData.continentImages['Generale'] ??
-            'assets/images/default_trip.jpg',
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -194,14 +181,22 @@ class _SearchScreenState extends State<SearchScreen> {
       hintStyle: TextStyle(color: _textColor.withOpacity(0.7)),
       prefixIconColor: _gradientEndColor,
       suffixIconColor: _gradientEndColor,
-      floatingLabelStyle: const TextStyle(color: _gradientEndColor), // Label when focused
+      floatingLabelStyle: const TextStyle(
+        color: _gradientEndColor,
+      ), // Label when focused
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: _gradientEndColor.withOpacity(0.5), width: 1.0), // Border when not focused
+        borderSide: BorderSide(
+          color: _gradientEndColor.withOpacity(0.5),
+          width: 1.0,
+        ), // Border when not focused
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: _gradientEndColor, width: 2.0), // Border when focused
+        borderSide: const BorderSide(
+          color: _gradientEndColor,
+          width: 2.0,
+        ), // Border when focused
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -212,9 +207,13 @@ class _SearchScreenState extends State<SearchScreen> {
         borderSide: const BorderSide(color: Colors.red, width: 2.0),
       ),
       filled: true,
-      fillColor: _cardBackgroundColor.withOpacity(0.9), // Slightly transparent white fill
-      contentPadding:
-      const EdgeInsets.symmetric(vertical: 14.0, horizontal: 16.0),
+      fillColor: _cardBackgroundColor.withOpacity(
+        0.9,
+      ), // Slightly transparent white fill
+      contentPadding: const EdgeInsets.symmetric(
+        vertical: 14.0,
+        horizontal: 16.0,
+      ),
     );
 
     return Scaffold(
@@ -230,7 +229,9 @@ class _SearchScreenState extends State<SearchScreen> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        iconTheme: const IconThemeData(color: Colors.white), // Set back button color to white
+        iconTheme: const IconThemeData(
+          color: Colors.white,
+        ), // Set back button color to white
       ),
       body: Container(
         width: double.infinity,
@@ -249,14 +250,20 @@ class _SearchScreenState extends State<SearchScreen> {
               children: [
                 Theme(
                   // Apply input decoration theme to TextField
-                  data: Theme.of(context)
-                      .copyWith(inputDecorationTheme: inputDecorationTheme),
+                  data: Theme.of(
+                    context,
+                  ).copyWith(inputDecorationTheme: inputDecorationTheme),
                   child: TextField(
                     controller: _searchController,
-                    style: const TextStyle(color: _textColor), // Input text color
+                    style: const TextStyle(
+                      color: _textColor,
+                    ), // Input text color
                     decoration: InputDecoration(
                       labelText: 'Cerca per località o titolo',
-                      prefixIcon: const Icon(Icons.search, color: _gradientEndColor),
+                      prefixIcon: const Icon(
+                        Icons.search,
+                        color: _gradientEndColor,
+                      ),
                       suffixIcon: IconButton(
                         icon: const Icon(Icons.clear, color: _gradientEndColor),
                         onPressed: () {
@@ -274,42 +281,50 @@ class _SearchScreenState extends State<SearchScreen> {
                     Expanded(
                       child: _isLoadingCategories
                           ? const Center(
-                        child: CircularProgressIndicator(
-                          valueColor:
-                          AlwaysStoppedAnimation<Color>(Colors.white),
-                        ),
-                      )
-                          : Theme(
-                        // Apply input decoration theme to Dropdown
-                        data: Theme.of(context).copyWith(
-                            inputDecorationTheme: inputDecorationTheme),
-                        child: DropdownButtonFormField<String>(
-                          value: _selectedCategoryFilter,
-                          style: const TextStyle(color: _textColor), // Selected item text color
-                          icon: const Icon(Icons.arrow_drop_down,
-                              color: _gradientEndColor),
-                          decoration: const InputDecoration(
-                            labelText: 'Filtra per Categoria',
-                          ),
-                          dropdownColor:
-                          _cardBackgroundColor, // Background of dropdown menu
-                          items: _categories.map((String category) {
-                            return DropdownMenuItem<String>(
-                              value: category,
-                              child: Text(
-                                category,
-                                style: const TextStyle(color: _textColor), // Dropdown menu item text color
+                              child: CircularProgressIndicator(
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
                               ),
-                            );
-                          }).toList(),
-                          onChanged: (String? newValue) {
-                            setState(() {
-                              _selectedCategoryFilter = newValue!;
-                              _performSearch();
-                            });
-                          },
-                        ),
-                      ),
+                            )
+                          : Theme(
+                              // Apply input decoration theme to Dropdown
+                              data: Theme.of(context).copyWith(
+                                inputDecorationTheme: inputDecorationTheme,
+                              ),
+                              child: DropdownButtonFormField<String>(
+                                value: _selectedCategoryFilter,
+                                style: const TextStyle(
+                                  color: _textColor,
+                                ), // Selected item text color
+                                icon: const Icon(
+                                  Icons.arrow_drop_down,
+                                  color: _gradientEndColor,
+                                ),
+                                decoration: const InputDecoration(
+                                  labelText: 'Filtra per Categoria',
+                                ),
+                                dropdownColor:
+                                    _cardBackgroundColor, // Background of dropdown menu
+                                items: _categories.map((String category) {
+                                  return DropdownMenuItem<String>(
+                                    value: category,
+                                    child: Text(
+                                      category,
+                                      style: const TextStyle(
+                                        color: _textColor,
+                                      ), // Dropdown menu item text color
+                                    ),
+                                  );
+                                }).toList(),
+                                onChanged: (String? newValue) {
+                                  setState(() {
+                                    _selectedCategoryFilter = newValue!;
+                                    _performSearch();
+                                  });
+                                },
+                              ),
+                            ),
                     ),
                   ],
                 ),
@@ -323,31 +338,39 @@ class _SearchScreenState extends State<SearchScreen> {
                           child: Theme(
                             // Apply input decoration theme to Date fields
                             data: Theme.of(context).copyWith(
-                                inputDecorationTheme: inputDecorationTheme),
+                              inputDecorationTheme: inputDecorationTheme,
+                            ),
                             child: InputDecorator(
                               decoration: InputDecoration(
                                 labelText: 'Data Inizio (filtro)',
-                                prefixIcon: const Icon(Icons.calendar_today,
-                                    color: _gradientEndColor),
+                                prefixIcon: const Icon(
+                                  Icons.calendar_today,
+                                  color: _gradientEndColor,
+                                ),
                                 suffixIcon: _startDateFilter != null
                                     ? IconButton(
-                                  icon: const Icon(Icons.clear,
-                                      color: _gradientEndColor),
-                                  onPressed: () {
-                                    setState(() {
-                                      _startDateFilter = null;
-                                      _performSearch();
-                                    });
-                                  },
-                                )
+                                        icon: const Icon(
+                                          Icons.clear,
+                                          color: _gradientEndColor,
+                                        ),
+                                        onPressed: () {
+                                          setState(() {
+                                            _startDateFilter = null;
+                                            _performSearch();
+                                          });
+                                        },
+                                      )
                                     : null,
                               ),
                               child: Text(
                                 _startDateFilter == null
                                     ? 'Seleziona data'
-                                    : DateFormat('dd/MM/yyyy')
-                                    .format(_startDateFilter!),
-                                style: const TextStyle(color: _textColor), // Displayed date text color
+                                    : DateFormat(
+                                        'dd/MM/yyyy',
+                                      ).format(_startDateFilter!),
+                                style: const TextStyle(
+                                  color: _textColor,
+                                ), // Displayed date text color
                               ),
                             ),
                           ),
@@ -362,31 +385,39 @@ class _SearchScreenState extends State<SearchScreen> {
                           child: Theme(
                             // Apply input decoration theme to Date fields
                             data: Theme.of(context).copyWith(
-                                inputDecorationTheme: inputDecorationTheme),
+                              inputDecorationTheme: inputDecorationTheme,
+                            ),
                             child: InputDecorator(
                               decoration: InputDecoration(
                                 labelText: 'Data Fine (filtro)',
-                                prefixIcon: const Icon(Icons.calendar_today,
-                                    color: _gradientEndColor),
+                                prefixIcon: const Icon(
+                                  Icons.calendar_today,
+                                  color: _gradientEndColor,
+                                ),
                                 suffixIcon: _endDateFilter != null
                                     ? IconButton(
-                                  icon: const Icon(Icons.clear,
-                                      color: _gradientEndColor),
-                                  onPressed: () {
-                                    setState(() {
-                                      _endDateFilter = null;
-                                      _performSearch();
-                                    });
-                                  },
-                                )
+                                        icon: const Icon(
+                                          Icons.clear,
+                                          color: _gradientEndColor,
+                                        ),
+                                        onPressed: () {
+                                          setState(() {
+                                            _endDateFilter = null;
+                                            _performSearch();
+                                          });
+                                        },
+                                      )
                                     : null,
                               ),
                               child: Text(
                                 _endDateFilter == null
                                     ? 'Seleziona data'
-                                    : DateFormat('dd/MM/yyyy')
-                                    .format(_endDateFilter!),
-                                style: const TextStyle(color: _textColor), // Displayed date text color
+                                    : DateFormat(
+                                        'dd/MM/yyyy',
+                                      ).format(_endDateFilter!),
+                                style: const TextStyle(
+                                  color: _textColor,
+                                ), // Displayed date text color
                               ),
                             ),
                           ),
@@ -400,8 +431,10 @@ class _SearchScreenState extends State<SearchScreen> {
                   alignment: Alignment.centerRight,
                   child: TextButton.icon(
                     onPressed: _clearFilters,
-                    icon:
-                    const Icon(Icons.filter_alt_off, color: Colors.white), // White icon
+                    icon: const Icon(
+                      Icons.filter_alt_off,
+                      color: Colors.white,
+                    ), // White icon
                     label: const Text(
                       'Cancella Filtri',
                       style: TextStyle(color: Colors.white), // White text
@@ -415,139 +448,117 @@ class _SearchScreenState extends State<SearchScreen> {
                 Expanded(
                   child: _searchResults.isEmpty
                       ? const Center(
-                    child: Text(
-                      'Nessun risultato trovato per i filtri selezionati.',
-                      style: TextStyle(
-                          color: _lightTextColor), // White text for empty results
-                    ),
-                  )
+                          child: Text(
+                            'Nessun risultato trovato per i filtri selezionati.',
+                            style: TextStyle(
+                              color: _lightTextColor,
+                            ), // White text for empty results
+                          ),
+                        )
                       : ListView.builder(
-                    itemCount: _searchResults.length,
-                    itemBuilder: (context, index) {
-                      final trip = _searchResults[index];
-                      final String coverImageUrl = trip.imageUrls.isNotEmpty
-                          ? trip.imageUrls.first
-                          : AppData.continentImages[trip.continent] ??
-                          AppData.continentImages['Generale'] ??
-                          'assets/images/default_trip.jpg';
-
-                      return Card(
-                        color: _cardBackgroundColor, // Card background white
-                        margin: const EdgeInsets.symmetric(vertical: 8.0),
-                        elevation: 4,
-                        shape: RoundedRectangleBorder(
-                          borderRadius:
-                          BorderRadius.circular(12), // Consistent rounding
-                          side: BorderSide(
-                              color: Colors.blue.shade200,
-                              width: 1), // Subtle border
-                        ),
-                        child: InkWell(
-                          onTap: () async {
-                            await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    TripDetailScreen(trip: trip),
+                          itemCount: _searchResults.length,
+                          itemBuilder: (context, index) {
+                            final trip = _searchResults[index];
+                            return Card(
+                              color:
+                                  _cardBackgroundColor, // Card background white
+                              margin: const EdgeInsets.symmetric(vertical: 8.0),
+                              elevation: 4,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                  12,
+                                ), // Consistent rounding
+                                side: BorderSide(
+                                  color: Colors.blue.shade200,
+                                  width: 1,
+                                ), // Subtle border
                               ),
-                            );
-                            _performSearch();
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.all(12.0),
-                            child: Row(
-                              children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(8.0),
-                                  child: Image(
-                                    image: _getImageProvider(
-                                      coverImageUrl,
-                                      trip.continent,
+                              child: InkWell(
+                                onTap: () async {
+                                  await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          TripDetailScreen(trip: trip),
                                     ),
-                                    height: 80,
-                                    width: 80,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, url, error) {
-                                      print(
-                                          'DEBUG - Errore caricamento immagine in SearchScreen: $error');
-                                      return _buildImageErrorPlaceholderSmall();
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                    CrossAxisAlignment.start,
+                                  );
+                                  _performSearch();
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.all(12.0),
+                                  child: Row(
                                     children: [
-                                      Text(
-                                        trip.title,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleLarge
-                                            ?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                          color: _textColor, // Dark text for title
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        trip.location,
-                                        style: Theme.of(
-                                          context,
-                                        ).textTheme.titleMedium?.copyWith(
-                                          color: _textColor
-                                              .withOpacity(0.8), // Slightly lighter dark
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        '${DateFormat('dd/MM/yyyy').format(trip.startDate)} - ${DateFormat('dd/MM/yyyy').format(trip.endDate)}',
-                                        style: Theme.of(
-                                          context,
-                                        ).textTheme.bodyMedium?.copyWith(
-                                          color: _gradientEndColor, // Blue for dates
-                                        ),
-                                      ),
-                                      Text(
-                                        'Categoria: ${trip.category}',
-                                        style: Theme.of(
-                                          context,
-                                        ).textTheme.bodySmall?.copyWith(
-                                          color: _gradientEndColor
-                                              .withOpacity(0.8), // Blue for category
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              trip.title,
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .titleLarge
+                                                  ?.copyWith(
+                                                    fontWeight: FontWeight.bold,
+                                                    color:
+                                                        _textColor, // Dark text for title
+                                                  ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              trip.location,
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .titleMedium
+                                                  ?.copyWith(
+                                                    color: _textColor.withOpacity(
+                                                      0.8,
+                                                    ), // Slightly lighter dark
+                                                  ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              '${DateFormat('dd/MM/yyyy').format(trip.startDate)} - ${DateFormat('dd/MM/yyyy').format(trip.endDate)}',
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodyMedium
+                                                  ?.copyWith(
+                                                    color:
+                                                        _gradientEndColor, // Blue for dates
+                                                  ),
+                                            ),
+                                            Text(
+                                              'Categoria: ${trip.category}',
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodySmall
+                                                  ?.copyWith(
+                                                    color: _gradientEndColor
+                                                        .withOpacity(
+                                                          0.8,
+                                                        ), // Blue for category
+                                                  ),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     ],
                                   ),
                                 ),
-                              ],
-                            ),
-                          ),
+                              ),
+                            );
+                          },
                         ),
-                      );
-                    },
-                  ),
                 ),
               ],
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildImageErrorPlaceholderSmall() {
-    return Container(
-      width: 80,
-      height: 80,
-      color: Colors.grey[200], // Placeholder color
-      child: Center(
-        child: Icon(Icons.image_not_supported, color: Colors.grey[600], size: 30),
       ),
     );
   }

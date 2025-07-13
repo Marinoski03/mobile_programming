@@ -1,11 +1,16 @@
 // lib/screens/add_edit_trip_screen.dart
 
+// lib/screens/add_edit_trip_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'dart:io';
+import 'dart:convert'; // Import for JSON decoding
+import 'package:http/http.dart' as http; // Import http package
+import 'dart:async'; // Import for Timer (debouncing)
 
 import '../models/trip.dart';
 import '../helpers/trip_database_helper.dart';
@@ -23,8 +28,7 @@ class AddEditTripScreen extends StatefulWidget {
 class _AddEditTripScreenState extends State<AddEditTripScreen> {
   final _formKey = GlobalKey<FormState>();
   late String _title;
-  late String _selectedContinent;
-  late String _selectedLocation;
+  late String _selectedLocation; // This will be the full selected location name
   late DateTime _startDate;
   late DateTime _endDate;
   late String _category;
@@ -34,6 +38,11 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
 
   final List<String> _newImagePaths = [];
   final List<String> _existingImageUrls = [];
+
+  // Nominatim related variables
+  TextEditingController _locationSearchController = TextEditingController();
+  List<dynamic> _locationSuggestions = [];
+  Timer? _debounce;
 
   // NUOVO METODO: Funzione per pulire il percorso dell'immagine
   String _sanitizeImagePath(String path) {
@@ -46,8 +55,9 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
     super.initState();
     if (widget.trip != null) {
       _title = widget.trip!.title;
-      _selectedContinent = widget.trip!.continent;
       _selectedLocation = widget.trip!.location;
+      _locationSearchController.text =
+          widget.trip!.location; // Set initial value for search field
       _startDate = widget.trip!.startDate;
       _endDate = widget.trip!.endDate;
       _category = widget.trip!.category;
@@ -60,10 +70,8 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
       }
     } else {
       _title = '';
-      _selectedContinent = AppData.continents.first;
-      _selectedLocation = AppData
-          .countriesByContinent[_selectedContinent]!
-          .first;
+      _selectedLocation = ''; // Initialize as empty for new trips
+      _locationSearchController.text = '';
       _startDate = DateTime.now();
       _endDate = DateTime.now().add(const Duration(days: 7));
       _category = AppData.categories.first;
@@ -71,6 +79,13 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
       _isFavorite = false;
       _toBeRepeated = false;
     }
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _locationSearchController.dispose();
+    super.dispose();
   }
 
   void _presentDatePicker(bool isStart) {
@@ -172,9 +187,73 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
     });
   }
 
+  // NEW: Function to search for locations using Nominatim
+  Future<void> _searchLocation(String query) async {
+    if (query.isEmpty) {
+      setState(() {
+        _locationSuggestions = [];
+      });
+      return;
+    }
+
+    // Nominatim's free public usage policy requests clients to limit requests to 1 request per second.
+    // Ensure you respect their Usage Policy: https://nominatim.org/release-docs/latest/api/Search/
+    final url = Uri.parse(
+      'https://nominatim.openstreetmap.org/search?q=$query&format=json&addressdetails=1&limit=5',
+    );
+
+    try {
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        setState(() {
+          _locationSuggestions = json.decode(response.body);
+        });
+      } else {
+        print('Nominatim API error: ${response.statusCode}');
+        setState(() {
+          _locationSuggestions = [];
+        });
+      }
+    } catch (e) {
+      print('Error fetching location suggestions: $e');
+      setState(() {
+        _locationSuggestions = [];
+      });
+    }
+  }
+
+  // NEW: Debounce function for location search
+  void _onLocationSearchChanged(String query) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      _searchLocation(query);
+    });
+  }
+
+  // NEW: Function to handle selection of a suggested location
+  void _selectLocationSuggestion(Map<String, dynamic> suggestion) {
+    setState(() {
+      _selectedLocation = suggestion['display_name'];
+      _locationSearchController.text = suggestion['display_name'];
+      _locationSuggestions = []; // Clear suggestions after selection
+
+      // Attempt to infer continent from addressdetails if available
+      // This is a heuristic and might not always be accurate or available
+    });
+  }
+
   void _saveTrip() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
+
+      // Ensure _selectedLocation is set from the text controller if no suggestion was explicitly picked
+      // This handles cases where the user types but doesn't select from suggestions
+      if (_selectedLocation.isEmpty &&
+          _locationSearchController.text.isNotEmpty) {
+        _selectedLocation = _locationSearchController.text;
+      } else if (_locationSearchController.text.isEmpty) {
+        _selectedLocation = 'Nessuna Nazione'; // Or handle as validation error
+      }
 
       // I percorsi sono già stati sanitizzati all'inizio (per existing)
       // e sono già puliti da ImagePicker (per new)
@@ -184,8 +263,7 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
       final newTrip = Trip(
         id: widget.trip?.id,
         title: _title,
-        location: _selectedLocation,
-        continent: _selectedContinent,
+        location: _selectedLocation, // Use the selected/typed location
         startDate: _startDate,
         endDate: _endDate,
         category: _category,
@@ -219,15 +297,6 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
 
   @override
   Widget build(BuildContext context) {
-    List<String> countriesForSelectedContinent =
-        AppData.countriesByContinent[_selectedContinent] ?? [];
-    if (!countriesForSelectedContinent.contains(_selectedLocation) &&
-        countriesForSelectedContinent.isNotEmpty) {
-      _selectedLocation = countriesForSelectedContinent.first;
-    } else if (countriesForSelectedContinent.isEmpty) {
-      _selectedLocation = 'Nessuna Nazione';
-    }
-
     return Scaffold(
       extendBodyBehindAppBar: true,
       backgroundColor: Colors.transparent,
@@ -294,109 +363,73 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                   ),
                   const SizedBox(height: 20),
 
-                  InputDecorator(
+                  // MODIFIED: Replaced Nazione Dropdown with a TextFormField for Nominatim search
+                  TextFormField(
+                    controller: _locationSearchController,
                     decoration: InputDecoration(
-                      labelText: 'Continente',
+                      labelText: 'Cerca Nazione / Città',
                       labelStyle: const TextStyle(color: Colors.white70),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8.0),
-                        borderSide: const BorderSide(color: Colors.white54),
+                      enabledBorder: const UnderlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white54),
                       ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8.0),
-                        borderSide: const BorderSide(color: Colors.white54),
+                      focusedBorder: const UnderlineInputBorder(
+                        borderSide: BorderSide(color: Colors.white),
                       ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8.0),
-                        borderSide: const BorderSide(color: Colors.white),
-                      ),
+                      suffixIcon: _locationSearchController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(
+                                Icons.clear,
+                                color: Colors.white70,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _locationSearchController.clear();
+                                  _selectedLocation = '';
+                                  _locationSuggestions = [];
+                                });
+                              },
+                            )
+                          : null,
                     ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        // MODIFICATO: Aggiungi un controllo per la validità del valore
-                        value: AppData.continents.contains(_selectedContinent)
-                            ? _selectedContinent
-                            : null, // Imposta a null se non trovato
-                        dropdownColor: Colors.blue.shade700,
-                        icon: const Icon(
-                          Icons.arrow_drop_down,
-                          color: Colors.white,
-                        ),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                        ),
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            _selectedContinent = newValue!;
-                            _selectedLocation =
-                                AppData
-                                    .countriesByContinent[_selectedContinent]!
-                                    .isNotEmpty
-                                ? AppData
-                                      .countriesByContinent[_selectedContinent]!
-                                      .first
-                                : 'Nessuna Nazione';
-                          });
-                        },
-                        items: AppData.continents.map<DropdownMenuItem<String>>(
-                          (String value) {
-                            return DropdownMenuItem<String>(
-                              value: value,
-                              child: Text(value),
-                            );
-                          },
-                        ).toList(),
-                      ),
-                    ),
+                    style: const TextStyle(color: Colors.white),
+                    onChanged:
+                        _onLocationSearchChanged, // Call the debounced search function
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Inserisci una nazione o città';
+                      }
+                      return null;
+                    },
+                    onSaved: (value) {
+                      _selectedLocation =
+                          value!; // Save the final text in the field
+                    },
                   ),
-                  const SizedBox(height: 20),
-
-                  InputDecorator(
-                    decoration: InputDecoration(
-                      labelText: 'Nazione',
-                      labelStyle: const TextStyle(color: Colors.white70),
-                      border: OutlineInputBorder(
+                  // Display search suggestions
+                  if (_locationSuggestions.isNotEmpty)
+                    Container(
+                      constraints: BoxConstraints(
+                        maxHeight: 200,
+                      ), // Limit height
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade600,
                         borderRadius: BorderRadius.circular(8.0),
-                        borderSide: const BorderSide(color: Colors.white54),
                       ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8.0),
-                        borderSide: const BorderSide(color: Colors.white54),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8.0),
-                        borderSide: const BorderSide(color: Colors.white),
-                      ),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: _selectedLocation,
-                        dropdownColor: Colors.blue.shade700,
-                        icon: const Icon(
-                          Icons.arrow_drop_down,
-                          color: Colors.white,
-                        ),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                        ),
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            _selectedLocation = newValue!;
-                          });
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: _locationSuggestions.length,
+                        itemBuilder: (context, index) {
+                          final suggestion = _locationSuggestions[index];
+                          return ListTile(
+                            title: Text(
+                              suggestion['display_name'],
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                            onTap: () => _selectLocationSuggestion(suggestion),
+                          );
                         },
-                        items: countriesForSelectedContinent
-                            .map<DropdownMenuItem<String>>((String value) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(value),
-                              );
-                            })
-                            .toList(),
                       ),
                     ),
-                  ),
                   const SizedBox(height: 20),
 
                   Row(
@@ -594,9 +627,7 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                   Row(
                     children: [
                       Icon(
-                        _toBeRepeated
-                            ? Icons.repeat_on
-                            : Icons.repeat,
+                        _toBeRepeated ? Icons.repeat_on : Icons.repeat,
                         color: _toBeRepeated
                             ? Colors.greenAccent
                             : Colors.white70,
@@ -654,9 +685,10 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                               scrollDirection: Axis.horizontal,
                               itemCount: _existingImageUrls.length,
                               itemBuilder: (ctx, index) {
-                                // MODIFICATO: Sanitizza il percorso al momento della visualizzazione
                                 final String sanitizedImageUrl =
-                                    _sanitizeImagePath(_existingImageUrls[index]);
+                                    _sanitizeImagePath(
+                                      _existingImageUrls[index],
+                                    );
                                 return Padding(
                                   padding: const EdgeInsets.only(right: 8.0),
                                   child: Stack(
@@ -664,7 +696,7 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                                       ClipRRect(
                                         borderRadius: BorderRadius.circular(10),
                                         child: Image.file(
-                                          File(sanitizedImageUrl), // Usa il percorso sanitizzato
+                                          File(sanitizedImageUrl),
                                           width: 100,
                                           height: 100,
                                           fit: BoxFit.cover,
@@ -744,7 +776,6 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                               scrollDirection: Axis.horizontal,
                               itemCount: _newImagePaths.length,
                               itemBuilder: (ctx, index) {
-                                // MODIFICATO: Sanitizza il percorso al momento della visualizzazione
                                 final String sanitizedImageUrl =
                                     _sanitizeImagePath(_newImagePaths[index]);
                                 return Padding(
@@ -754,7 +785,7 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                                       ClipRRect(
                                         borderRadius: BorderRadius.circular(10),
                                         child: Image.file(
-                                          File(sanitizedImageUrl), // Usa il percorso sanitizzato
+                                          File(sanitizedImageUrl),
                                           width: 100,
                                           height: 100,
                                           fit: BoxFit.cover,
@@ -780,9 +811,7 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                                         top: 0,
                                         right: 0,
                                         child: GestureDetector(
-                                          onTap: () => _removeImage(
-                                            index,
-                                          ),
+                                          onTap: () => _removeImage(index),
                                           child: const CircleAvatar(
                                             radius: 12,
                                             backgroundColor: Colors.red,

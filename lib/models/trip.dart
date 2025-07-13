@@ -9,7 +9,6 @@ class Trip {
   final DateTime endDate;
   final String notes;
   final String category;
-  final String continent;
   final bool isFavorite;
   final bool
   toBeRepeated; // <--- Nome della proprietà allineato con TripDetailScreen
@@ -23,7 +22,6 @@ class Trip {
     required this.endDate,
     this.notes = '',
     required this.category,
-    required this.continent,
     this.isFavorite = false,
     this.toBeRepeated = false, // <--- Inizializzazione della proprietà
     this.imageUrls = const [],
@@ -39,7 +37,6 @@ class Trip {
       'endDate': endDate.toIso8601String(), // Salva come stringa ISO 8601
       'notes': notes,
       'category': category,
-      'continent': continent,
       'isFavorite': isFavorite ? 1 : 0, // SQLite non ha booleani, usa 0 o 1
       'toBeRepeated': toBeRepeated ? 1 : 0, // <--- Gestione per il database
       'imageUrls': imageUrls.join(
@@ -58,7 +55,6 @@ class Trip {
       endDate: DateTime.parse(map['endDate'] as String),
       notes: map['notes'] as String,
       category: map['category'] as String,
-      continent: map['continent'] as String,
       isFavorite: (map['isFavorite'] as int) == 1,
       toBeRepeated:
           (map['toBeRepeated'] as int) ==
@@ -92,7 +88,6 @@ class Trip {
       endDate: endDate ?? this.endDate,
       notes: notes ?? this.notes,
       category: category ?? this.category,
-      continent: continent ?? this.continent,
       isFavorite: isFavorite ?? this.isFavorite,
       toBeRepeated:
           toBeRepeated ??
@@ -103,6 +98,6 @@ class Trip {
 
   @override
   String toString() {
-    return 'Trip{id: $id, title: $title, location: $location, startDate: $startDate, endDate: $endDate, notes: $notes, category: $category, continent: $continent, isFavorite: $isFavorite, toBeRepeated: $toBeRepeated, imageUrls: $imageUrls}';
+    return 'Trip{id: $id, title: $title, location: $location, startDate: $startDate, endDate: $endDate, notes: $notes, category: $category, isFavorite: $isFavorite, toBeRepeated: $toBeRepeated, imageUrls: $imageUrls}';
   }
 }

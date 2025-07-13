@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'dart:io';
 
 import '../models/trip.dart';
 import '../helpers/trip_database_helper.dart';
@@ -11,7 +10,7 @@ import 'analysis_screen.dart';
 import 'categories_screen.dart';
 import 'search_screen.dart';
 import 'trip_detail_screen.dart';
-import '../utils/app_data.dart'; // Assicurati che AppData sia importato per i placeholder
+// Assicurati che AppData sia importato per i placeholder
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -23,12 +22,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   List<Trip> _trips = [];
   List<Trip> _favoriteTrips = [];
-
-  // NUOVO METODO: Funzione per pulire il percorso dell'immagine
-  String _sanitizeImagePath(String path) {
-    // Rimuove [" e "] all'inizio e alla fine e qualsiasi altra virgoletta doppia.
-    return path.replaceAll('["', '').replaceAll('"]', '').replaceAll('"', '');
-  }
 
   @override
   void initState() {
@@ -53,36 +46,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // Helper per ottenere l'ImageProvider corretto, simile a TripDetailScreen
-  ImageProvider _getImageProvider(String rawImageUrl, String continent) {
-    // MODIFICATO: Sanitizza il percorso prima di usarlo
-    final String imageUrl = _sanitizeImagePath(rawImageUrl);
-
-    if (imageUrl.startsWith('assets/')) {
-      return AssetImage(imageUrl);
-    } else if (imageUrl.startsWith('/data/') ||
-        imageUrl.startsWith('/Users/') || // Aggiunto per coprire i percorsi assoluti
-        imageUrl.startsWith('file://')) {
-      final file = File(imageUrl.replaceFirst('file://', ''));
-      if (file.existsSync()) {
-        return FileImage(file);
-      } else {
-        print('DEBUG - HomeScreen: File immagine non trovato: $imageUrl');
-        // Fallback a immagine continente o default se il file non esiste
-        return AssetImage(
-          AppData.continentImages[continent] ??
-              AppData.continentImages['Generale'] ??
-              'assets/images/default_trip.jpg',
-        );
-      }
-    } else {
-      // Per ogni altro caso, ricadi sull'immagine del continente o default
-      return AssetImage(
-        AppData.continentImages[continent] ??
-            AppData.continentImages['Generale'] ??
-            'assets/images/default_trip.jpg',
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -179,41 +142,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                     child: Row(
                                       // Usa una Row per l'immagine a sinistra e il testo a destra
                                       children: [
-                                        // Sezione Immagine
-                                        ClipRRect(
-                                          borderRadius: const BorderRadius.only(
-                                            topLeft: Radius.circular(12),
-                                            bottomLeft: Radius.circular(12),
-                                          ),
-                                          child: SizedBox(
-                                            width:
-                                                100, // Larghezza fissa per l'immagine
-                                            height:
-                                                100, // Altezza fissa per l'immagine
-                                            child: Image(
-                                              image: trip.imageUrls.isNotEmpty
-                                                  ? _getImageProvider(
-                                                      trip.imageUrls.first,
-                                                      trip.continent,
-                                                    )
-                                                  : _getImageProvider(
-                                                      '',
-                                                      trip.continent,
-                                                    ), // Usa il tuo helper per il fallback
-                                              fit: BoxFit.cover,
-                                              errorBuilder:
-                                                  (context, error, stackTrace) {
-                                                    print(
-                                                      'DEBUG - Errore in HomeScreen (Ultimi viaggi) caricamento immagine: $error',
-                                                    );
-                                                    return _buildNoImagePlaceholder(
-                                                      height: 100,
-                                                      width: 100,
-                                                    );
-                                                  },
-                                            ),
-                                          ),
-                                        ),
                                         // Sezione Contenuto Testuale
                                         Expanded(
                                           // Permette alla colonna del testo di occupare lo spazio rimanente
@@ -387,19 +315,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                 itemBuilder: (context, index) {
                                   final trip = _favoriteTrips[index];
 
-                                  // Determina l'URL dell'immagine di copertina
-                                  final String coverImageUrl;
-                                  if (trip.imageUrls.isNotEmpty) {
-                                    coverImageUrl = trip.imageUrls.first;
-                                  } else {
-                                    // Usa l'immagine del continente o una generica di default
-                                    coverImageUrl =
-                                        AppData.continentImages[trip
-                                            .continent] ??
-                                        AppData.continentImages['Generale'] ??
-                                        'assets/images/default_trip.jpg';
-                                  }
-
                                   return GestureDetector(
                                     onTap: () => _navigateToScreen(
                                       context,
@@ -424,31 +339,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          ClipRRect(
-                                            borderRadius:
-                                                const BorderRadius.vertical(
-                                                  top: Radius.circular(12),
-                                                ),
-                                            child: Image(
-                                              image: _getImageProvider(
-                                                coverImageUrl,
-                                                trip.continent,
-                                              ),
-                                              height: 100,
-                                              width: double.infinity,
-                                              fit: BoxFit.cover,
-                                              errorBuilder: (context, error, stackTrace) {
-                                                print(
-                                                  'DEBUG - Errore in HomeScreen loading image: $error',
-                                                );
-                                                // Passa le dimensioni specifiche al placeholder
-                                                return _buildNoImagePlaceholder(
-                                                  height: 100,
-                                                  width: double.infinity,
-                                                );
-                                              },
-                                            ),
-                                          ),
                                           Padding(
                                             padding: const EdgeInsets.all(8.0),
                                             child: Column(
@@ -492,7 +382,10 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _navigateToScreen(context, const AddEditTripScreen()), // MODIFICATO: Aggiunto 'const' se la schermata è const
+        onPressed: () => _navigateToScreen(
+          context,
+          const AddEditTripScreen(),
+        ), // MODIFICATO: Aggiunto 'const' se la schermata è const
         icon: const Icon(Icons.add),
         label: const Text('Aggiungi Viaggio'),
         backgroundColor: Colors.white,
@@ -503,20 +396,4 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // Modifica qui: aggiungi parametri opzionali per altezza e larghezza
-  Widget _buildNoImagePlaceholder({double? height, double? width}) {
-    return Container(
-      height: height ?? 100, // Usa l'altezza passata o default 100
-      width:
-          width ??
-          double.infinity, // Usa la larghezza passata o default double.infinity
-      color: Colors.grey[200],
-      child: Center(
-        child: Icon(
-          Icons.image_not_supported,
-          color: Colors.grey[600],
-          size: 50,
-        ),
-      ),
-    );
-  }
 }
