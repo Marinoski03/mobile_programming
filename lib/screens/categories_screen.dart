@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import '../helpers/trip_database_helper.dart';
 import 'package:travel_diary_app/screens/search_screen.dart';
+import '../utils/app_data.dart'; // Importa AppData per i colori
 
 class CategoriesScreen extends StatefulWidget {
   const CategoriesScreen({super.key});
@@ -12,13 +13,7 @@ class CategoriesScreen extends StatefulWidget {
 }
 
 class _CategoriesScreenState extends State<CategoriesScreen> {
-  // Define colors based on the home_screen palette
-  static const Color _gradientStartColor = Colors.blue; // Simpler blue for start
-  static const Color _gradientEndColor = Color.fromARGB(255, 13, 71, 161); // A darker blue for end
-  static const Color _cardBackgroundColor = Colors.white; // Cards remain white
-  static const Color _textColorOnCard = Colors.black87; // Dark text on white cards
-  static const Color _textColorOnGradient = Colors.white; // White text on blue gradient
-  static const Color _iconColor = Color.fromARGB(255, 13, 71, 161); // Dark blue for icons on cards
+  // Rimosse le definizioni di colore locali, useremo direttamente AppData
 
   Map<String, int> _categoryCounts = {};
   late Future<void> _loadCategoriesFuture;
@@ -57,14 +52,14 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         title: const Text(
           'Categorie Viaggi',
           style: TextStyle(
-            color: _textColorOnGradient, // Text color on gradient background
+            color: AppData.antiFlashWhite, // Colore testo aggiornato
             fontWeight: FontWeight.bold,
           ),
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            color: _textColorOnGradient, // Icon color to match text
+            color: AppData.antiFlashWhite, // Colore icona aggiornato
             onPressed: () {
               setState(() {
                 _loadCategoriesFuture = _loadCategoryCounts();
@@ -78,10 +73,13 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
-            // Using blue shades similar to HomeScreen
-            colors: [_gradientStartColor, _gradientEndColor],
+            // Gradiente con colori AppData
+            colors: [
+              AppData.silverLakeBlue.withOpacity(0.7),
+              AppData.charcoal.withOpacity(0.9)
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -92,11 +90,10 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
             future: _loadCategoriesFuture,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(
-                  // Use _textColorOnGradient for loading indicator on dark gradient
+                return Center(
                   child: CircularProgressIndicator(
-                    valueColor:
-                    AlwaysStoppedAnimation<Color>(_textColorOnGradient),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                        AppData.antiFlashWhite), // Colore aggiornato
                   ),
                 );
               }
@@ -106,7 +103,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   child: Text(
                     'Errore nel caricamento delle categorie: ${snapshot.error}',
                     style: const TextStyle(
-                        color: _textColorOnGradient), // Error text in white
+                        color: AppData.antiFlashWhite), // Colore testo aggiornato
                   ),
                 );
               }
@@ -118,12 +115,10 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   children: [
                     Text(
                       'Riepilogo per categoria:',
-                      style: Theme.of(context)
-                          .textTheme
-                          .headlineSmall
+                      style: Theme.of(context).textTheme.headlineSmall
                           ?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: _textColorOnGradient, // Header text in white
+                        color: AppData.antiFlashWhite, // Colore testo aggiornato
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -135,8 +130,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                           'Nessuna categoria trovata. Aggiungi dei viaggi per vederle qui.',
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                              color:
-                              _textColorOnGradient), // Empty state text in white
+                              color: AppData
+                                  .antiFlashWhite), // Colore testo aggiornato
                         ),
                       ),
                     )
@@ -150,31 +145,31 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                           );
                           final count = _categoryCounts[category];
                           return Card(
-                            // Card background remains Anti-flash White for contrast
-                            color: _cardBackgroundColor,
+                            // Colore Card aggiornato
+                            color: AppData.antiFlashWhite,
                             margin: const EdgeInsets.symmetric(
                                 vertical: 8.0),
                             elevation: 4,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12), // Adjusted to 12
                               side: BorderSide(
-                                  color: Colors.blue.shade200, // Light blue border
+                                  color: AppData.silverLakeBlue.withOpacity(0.5), // Colore bordo aggiornato
                                   width: 1),
                             ),
                             child: ListTile(
                               leading: const Icon(Icons.folder_open,
-                                  color: _iconColor), // Dark blue for icon
+                                  color: AppData.silverLakeBlue), // Colore icona aggiornato
                               title: Text(
                                 category,
                                 style: const TextStyle(
-                                  color: _textColorOnCard, // Dark text for title
+                                  color: AppData.charcoal, // Colore testo aggiornato
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                               trailing: Text(
                                 '$count viaggi',
                                 style: TextStyle(
-                                  color: _iconColor, // Dark blue for count text
+                                  color: AppData.silverLakeBlue, // Colore testo aggiornato
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),

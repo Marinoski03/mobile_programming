@@ -47,10 +47,12 @@ dependencies:
   intl: ^0.20.2
   # Aggiunta la dipendenza per il caching delle immagini di rete
   cached_network_image: ^3.3.1 # Controlla sempre su pub.dev per l'ultima versione stabile
+  google_fonts: ^6.0.0 # SPOSTATO QUI DALLA SEZIONE dev_dependencies
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  # google_fonts: ^latest_version # RIMOSSO DA QUI
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is

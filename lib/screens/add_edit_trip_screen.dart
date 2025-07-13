@@ -1,23 +1,21 @@
 // lib/screens/add_edit_trip_screen.dart
 
-// lib/screens/add_edit_trip_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'dart:io';
-import 'dart:convert'; // Import for JSON decoding
-import 'package:http/http.dart' as http; // Import http package
-import 'dart:async'; // Import for Timer (debouncing)
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'dart:async';
 
 import '../models/trip.dart';
 import '../helpers/trip_database_helper.dart';
-import '../utils/app_data.dart'; // Importa AppData
+import '../utils/app_data.dart'; // Importa il file AppData
 
 class AddEditTripScreen extends StatefulWidget {
-  final Trip? trip; // Trip è ora opzionale per la creazione
+  final Trip? trip;
 
   const AddEditTripScreen({super.key, this.trip});
 
@@ -28,7 +26,7 @@ class AddEditTripScreen extends StatefulWidget {
 class _AddEditTripScreenState extends State<AddEditTripScreen> {
   final _formKey = GlobalKey<FormState>();
   late String _title;
-  late String _selectedLocation; // This will be the full selected location name
+  late String _selectedLocation;
   late DateTime _startDate;
   late DateTime _endDate;
   late String _category;
@@ -40,13 +38,12 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
   final List<String> _existingImageUrls = [];
 
   // Nominatim related variables
-  TextEditingController _locationSearchController = TextEditingController();
+  final TextEditingController _locationSearchController = TextEditingController();
   List<dynamic> _locationSuggestions = [];
   Timer? _debounce;
 
-  // NUOVO METODO: Funzione per pulire il percorso dell'immagine
+  // Funzione per pulire il percorso dell'immagine
   String _sanitizeImagePath(String path) {
-    // Rimuove [" e "] all'inizio e alla fine e qualsiasi altra virgoletta doppia.
     return path.replaceAll('["', '').replaceAll('"]', '').replaceAll('"', '');
   }
 
@@ -56,21 +53,21 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
     if (widget.trip != null) {
       _title = widget.trip!.title;
       _selectedLocation = widget.trip!.location;
-      _locationSearchController.text =
-          widget.trip!.location; // Set initial value for search field
+      _locationSearchController.text = widget.trip!.location;
       _startDate = widget.trip!.startDate;
       _endDate = widget.trip!.endDate;
       _category = widget.trip!.category;
       _notes = widget.trip!.notes;
       _isFavorite = widget.trip!.isFavorite;
       _toBeRepeated = widget.trip!.toBeRepeated;
-      // Modificato: SANITIZZA I PERCORSI DELLE IMMAGINI ESISTENTI AL CARICAMENTO
+      
+      // Sanitizza i percorsi delle immagini esistenti
       for (String url in widget.trip!.imageUrls) {
         _existingImageUrls.add(_sanitizeImagePath(url));
       }
     } else {
       _title = '';
-      _selectedLocation = ''; // Initialize as empty for new trips
+      _selectedLocation = '';
       _locationSearchController.text = '';
       _startDate = DateTime.now();
       _endDate = DateTime.now().add(const Duration(days: 7));
@@ -137,31 +134,25 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
         final File imageFile = File(xFile.path);
 
         if (!await imageFile.exists()) {
-          print(
-            'DEBUG - File temporaneo non trovato, potrebbe essere stato cancellato: ${imageFile.path}',
-          );
+          debugPrint('DEBUG - File temporaneo non trovato: ${imageFile.path}');
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text(
-                  'Immagine selezionata temporanea non trovata, riprova.',
-                ),
+                content: Text('Immagine selezionata temporanea non trovata, riprova.'),
               ),
             );
           }
           continue;
         }
 
-        final String fileName =
-            '${DateTime.now().microsecondsSinceEpoch}_${p.basename(imageFile.path)}';
+        final String fileName = '${DateTime.now().microsecondsSinceEpoch}_${p.basename(imageFile.path)}';
         final String savedPath = p.join(appDir.path, fileName);
 
         final newFile = await imageFile.copy(savedPath);
-        // NON SANITIZZARE QUI, IL PATH È GIÀ CORRETTO DA ImagePicker E copy
         tempSavedPaths.add(newFile.path);
-        print('DEBUG - Immagine copiata e salvata in: ${newFile.path}');
+        debugPrint('DEBUG - Immagine copiata e salvata in: ${newFile.path}');
       } catch (e) {
-        print('Errore durante la copia dell\'immagine ${xFile.path}: $e');
+        debugPrint('Errore durante la copia dell\'immagine ${xFile.path}: $e');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -172,9 +163,11 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
       }
     }
 
-    setState(() {
-      _newImagePaths.addAll(tempSavedPaths);
-    });
+    if (mounted) {
+      setState(() {
+        _newImagePaths.addAll(tempSavedPaths);
+      });
+    }
   }
 
   void _removeImage(int index, {bool isExisting = false}) {
@@ -187,42 +180,49 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
     });
   }
 
-  // NEW: Function to search for locations using Nominatim
+  // Funzione per cercare locations usando Nominatim
   Future<void> _searchLocation(String query) async {
     if (query.isEmpty) {
-      setState(() {
-        _locationSuggestions = [];
-      });
+      if (mounted) {
+        setState(() {
+          _locationSuggestions = [];
+        });
+      }
       return;
     }
 
-    // Nominatim's free public usage policy requests clients to limit requests to 1 request per second.
-    // Ensure you respect their Usage Policy: https://nominatim.org/release-docs/latest/api/Search/
     final url = Uri.parse(
-      'https://nominatim.openstreetmap.org/search?q=$query&format=json&addressdetails=1&limit=5',
+      'https://nominatim.openstreetmap.org/search?q=${Uri.encodeQueryComponent(query)}&format=json&addressdetails=1&limit=5',
     );
 
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {
-        setState(() {
-          _locationSuggestions = json.decode(response.body);
-        });
+        final List<dynamic> results = json.decode(response.body);
+        if (mounted) {
+          setState(() {
+            _locationSuggestions = results;
+          });
+        }
       } else {
-        print('Nominatim API error: ${response.statusCode}');
+        debugPrint('Nominatim API error: ${response.statusCode}');
+        if (mounted) {
+          setState(() {
+            _locationSuggestions = [];
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching location suggestions: $e');
+      if (mounted) {
         setState(() {
           _locationSuggestions = [];
         });
       }
-    } catch (e) {
-      print('Error fetching location suggestions: $e');
-      setState(() {
-        _locationSuggestions = [];
-      });
     }
   }
 
-  // NEW: Debounce function for location search
+  // Funzione debounce per la ricerca delle location
   void _onLocationSearchChanged(String query) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
@@ -230,15 +230,12 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
     });
   }
 
-  // NEW: Function to handle selection of a suggested location
+  // Funzione per gestire la selezione di un location suggerita
   void _selectLocationSuggestion(Map<String, dynamic> suggestion) {
     setState(() {
-      _selectedLocation = suggestion['display_name'];
-      _locationSearchController.text = suggestion['display_name'];
-      _locationSuggestions = []; // Clear suggestions after selection
-
-      // Attempt to infer continent from addressdetails if available
-      // This is a heuristic and might not always be accurate or available
+      _selectedLocation = suggestion['display_name'] ?? '';
+      _locationSearchController.text = suggestion['display_name'] ?? '';
+      _locationSuggestions = [];
     });
   }
 
@@ -246,24 +243,20 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
 
-      // Ensure _selectedLocation is set from the text controller if no suggestion was explicitly picked
-      // This handles cases where the user types but doesn't select from suggestions
-      if (_selectedLocation.isEmpty &&
-          _locationSearchController.text.isNotEmpty) {
+      // Assicura che _selectedLocation sia impostato dal controller se necessario
+      if (_selectedLocation.isEmpty && _locationSearchController.text.isNotEmpty) {
         _selectedLocation = _locationSearchController.text;
       } else if (_locationSearchController.text.isEmpty) {
-        _selectedLocation = 'Nessuna Nazione'; // Or handle as validation error
+        _selectedLocation = 'Nessuna Nazione';
       }
 
-      // I percorsi sono già stati sanitizzati all'inizio (per existing)
-      // e sono già puliti da ImagePicker (per new)
       final List<String> allImageUrls = List.from(_existingImageUrls);
       allImageUrls.addAll(_newImagePaths);
 
       final newTrip = Trip(
         id: widget.trip?.id,
         title: _title,
-        location: _selectedLocation, // Use the selected/typed location
+        location: _selectedLocation,
         startDate: _startDate,
         endDate: _endDate,
         category: _category,
@@ -273,9 +266,7 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
         toBeRepeated: _toBeRepeated,
       );
 
-      print(
-        'DEBUG - Percorsi immagini finali (per DB) prima del POP: $allImageUrls',
-      );
+      debugPrint('DEBUG - Percorsi immagini finali: $allImageUrls');
 
       try {
         if (widget.trip == null) {
@@ -287,10 +278,12 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
           Navigator.of(context).pop(newTrip);
         }
       } catch (e) {
-        print('Errore durante il salvataggio del viaggio nel DB: $e');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Errore durante il salvataggio: $e')),
-        );
+        debugPrint('Errore durante il salvataggio del viaggio nel DB: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Errore durante il salvataggio: $e')),
+          );
+        }
       }
     }
   }
@@ -298,24 +291,25 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // IMPOSTATO BACKGROUND SCAFFOLD SU ANTI-FLASH WHITE
+      backgroundColor: AppData.antiFlashWhite,
       extendBodyBehindAppBar: true,
-      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(
           widget.trip == null ? 'Aggiungi Viaggio' : 'Modifica Viaggio',
-          style: const TextStyle(color: Colors.white),
+          style: const TextStyle(color: AppData.antiFlashWhite),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: AppData.antiFlashWhite),
           onPressed: () {
             Navigator.of(context).pop();
           },
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.save, color: Colors.white),
+            icon: const Icon(Icons.save, color: AppData.antiFlashWhite),
             onPressed: _saveTrip,
           ),
         ],
@@ -325,7 +319,11 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
         height: double.infinity,
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Colors.blue.shade300, Colors.blue.shade800],
+            // COLORI DEL GRADIENTE CONFORMI AL PRIMARIO E AL NEUTRO SCURO
+            colors: [
+              AppData.silverLakeBlue.withOpacity(0.7),
+              AppData.charcoal.withOpacity(0.9)
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -338,19 +336,21 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Campo Titolo
                   TextFormField(
                     initialValue: _title,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Titolo del Viaggio',
-                      labelStyle: TextStyle(color: Colors.white70),
+                      // TESTO E BORDI DEI CAMPI DI INPUT SU SFONDO SCURO -> ANTI-FLASH WHITE
+                      labelStyle: TextStyle(color: AppData.antiFlashWhite.withOpacity(0.7)),
                       enabledBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(color: Colors.white54),
+                        borderSide: BorderSide(color: AppData.antiFlashWhite.withOpacity(0.5)),
                       ),
-                      focusedBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(color: Colors.white),
+                      focusedBorder: const UnderlineInputBorder(
+                        borderSide: BorderSide(color: AppData.antiFlashWhite),
                       ),
                     ),
-                    style: const TextStyle(color: Colors.white),
+                    style: const TextStyle(color: AppData.antiFlashWhite),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Inserisci un titolo per il viaggio';
@@ -358,28 +358,28 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                       return null;
                     },
                     onSaved: (value) {
-                      _title = value!;
+                      _title = value ?? '';
                     },
                   ),
                   const SizedBox(height: 20),
 
-                  // MODIFIED: Replaced Nazione Dropdown with a TextFormField for Nominatim search
+                  // Campo Location con ricerca Nominatim
                   TextFormField(
                     controller: _locationSearchController,
                     decoration: InputDecoration(
                       labelText: 'Cerca Nazione / Città',
-                      labelStyle: const TextStyle(color: Colors.white70),
-                      enabledBorder: const UnderlineInputBorder(
-                        borderSide: BorderSide(color: Colors.white54),
+                      labelStyle: const TextStyle(color: AppData.antiFlashWhite),
+                      enabledBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: AppData.antiFlashWhite.withOpacity(0.5)),
                       ),
                       focusedBorder: const UnderlineInputBorder(
-                        borderSide: BorderSide(color: Colors.white),
+                        borderSide: BorderSide(color: AppData.antiFlashWhite),
                       ),
                       suffixIcon: _locationSearchController.text.isNotEmpty
                           ? IconButton(
-                              icon: const Icon(
+                              icon: Icon(
                                 Icons.clear,
-                                color: Colors.white70,
+                                color: AppData.antiFlashWhite.withOpacity(0.7),
                               ),
                               onPressed: () {
                                 setState(() {
@@ -391,9 +391,8 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                             )
                           : null,
                     ),
-                    style: const TextStyle(color: Colors.white),
-                    onChanged:
-                        _onLocationSearchChanged, // Call the debounced search function
+                    style: const TextStyle(color: AppData.antiFlashWhite),
+                    onChanged: _onLocationSearchChanged,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Inserisci una nazione o città';
@@ -401,18 +400,16 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                       return null;
                     },
                     onSaved: (value) {
-                      _selectedLocation =
-                          value!; // Save the final text in the field
+                      _selectedLocation = value ?? '';
                     },
                   ),
-                  // Display search suggestions
+                  
+                  // Mostra i suggerimenti della ricerca
                   if (_locationSuggestions.isNotEmpty)
                     Container(
-                      constraints: BoxConstraints(
-                        maxHeight: 200,
-                      ), // Limit height
+                      constraints: const BoxConstraints(maxHeight: 200),
                       decoration: BoxDecoration(
-                        color: Colors.blue.shade600,
+                        color: AppData.charcoal.withOpacity(0.8), // SFONDO SUGGERIMENTI
                         borderRadius: BorderRadius.circular(8.0),
                       ),
                       child: ListView.builder(
@@ -422,8 +419,8 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                           final suggestion = _locationSuggestions[index];
                           return ListTile(
                             title: Text(
-                              suggestion['display_name'],
-                              style: const TextStyle(color: Colors.white),
+                              suggestion['display_name'] ?? '',
+                              style: const TextStyle(color: AppData.antiFlashWhite), // TESTO SUGGERIMENTI
                             ),
                             onTap: () => _selectLocationSuggestion(suggestion),
                           );
@@ -432,6 +429,7 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                     ),
                   const SizedBox(height: 20),
 
+                  // Data Inizio e Fine
                   Row(
                     children: [
                       Expanded(
@@ -440,26 +438,18 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                           child: InputDecorator(
                             decoration: InputDecoration(
                               labelText: 'Data Inizio',
-                              labelStyle: const TextStyle(
-                                color: Colors.white70,
-                              ),
+                              labelStyle: TextStyle(color: AppData.antiFlashWhite.withOpacity(0.7)),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8.0),
-                                borderSide: const BorderSide(
-                                  color: Colors.white54,
-                                ),
+                                borderSide: BorderSide(color: AppData.antiFlashWhite.withOpacity(0.5)),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8.0),
-                                borderSide: const BorderSide(
-                                  color: Colors.white54,
-                                ),
+                                borderSide: BorderSide(color: AppData.antiFlashWhite.withOpacity(0.5)),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8.0),
-                                borderSide: const BorderSide(
-                                  color: Colors.white,
-                                ),
+                                borderSide: const BorderSide(color: AppData.antiFlashWhite),
                               ),
                             ),
                             child: Row(
@@ -467,12 +457,9 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                               children: [
                                 Text(
                                   DateFormat('dd/MM/yyyy').format(_startDate),
-                                  style: const TextStyle(color: Colors.white),
+                                  style: const TextStyle(color: AppData.antiFlashWhite),
                                 ),
-                                const Icon(
-                                  Icons.calendar_today,
-                                  color: Colors.white,
-                                ),
+                                const Icon(Icons.calendar_today, color: AppData.antiFlashWhite),
                               ],
                             ),
                           ),
@@ -485,26 +472,18 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                           child: InputDecorator(
                             decoration: InputDecoration(
                               labelText: 'Data Fine',
-                              labelStyle: const TextStyle(
-                                color: Colors.white70,
-                              ),
+                              labelStyle: TextStyle(color: AppData.antiFlashWhite.withOpacity(0.7)),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8.0),
-                                borderSide: const BorderSide(
-                                  color: Colors.white54,
-                                ),
+                                borderSide: BorderSide(color: AppData.antiFlashWhite.withOpacity(0.5)),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8.0),
-                                borderSide: const BorderSide(
-                                  color: Colors.white54,
-                                ),
+                                borderSide: BorderSide(color: AppData.antiFlashWhite.withOpacity(0.5)),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8.0),
-                                borderSide: const BorderSide(
-                                  color: Colors.white,
-                                ),
+                                borderSide: const BorderSide(color: AppData.antiFlashWhite),
                               ),
                             ),
                             child: Row(
@@ -512,12 +491,9 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                               children: [
                                 Text(
                                   DateFormat('dd/MM/yyyy').format(_endDate),
-                                  style: const TextStyle(color: Colors.white),
+                                  style: const TextStyle(color: AppData.antiFlashWhite),
                                 ),
-                                const Icon(
-                                  Icons.calendar_today,
-                                  color: Colors.white,
-                                ),
+                                const Icon(Icons.calendar_today, color: AppData.antiFlashWhite),
                               ],
                             ),
                           ),
@@ -527,87 +503,81 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                   ),
                   const SizedBox(height: 20),
 
+                  // Dropdown Categoria
                   InputDecorator(
                     decoration: InputDecoration(
                       labelText: 'Categoria',
-                      labelStyle: const TextStyle(color: Colors.white70),
+                      labelStyle: TextStyle(color: AppData.antiFlashWhite.withOpacity(0.7)),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8.0),
-                        borderSide: const BorderSide(color: Colors.white54),
+                        borderSide: BorderSide(color: AppData.antiFlashWhite.withOpacity(0.5)),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8.0),
-                        borderSide: const BorderSide(color: Colors.white54),
+                        borderSide: BorderSide(color: AppData.antiFlashWhite.withOpacity(0.5)),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8.0),
-                        borderSide: const BorderSide(color: Colors.white),
+                        borderSide: const BorderSide(color: AppData.antiFlashWhite),
                       ),
                     ),
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<String>(
                         value: _category,
-                        dropdownColor: Colors.blue.shade700,
-                        icon: const Icon(
-                          Icons.arrow_drop_down,
-                          color: Colors.white,
-                        ),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                        ),
+                        dropdownColor: AppData.charcoal.withOpacity(0.9), // SFONDO DROPDOWN
+                        icon: const Icon(Icons.arrow_drop_down, color: AppData.antiFlashWhite),
+                        style: const TextStyle(color: AppData.antiFlashWhite, fontSize: 16),
                         onChanged: (String? newValue) {
                           setState(() {
                             _category = newValue!;
                           });
                         },
-                        items: AppData.categories.map<DropdownMenuItem<String>>(
-                          (String value) {
-                            return DropdownMenuItem<String>(
-                              value: value,
-                              child: Text(value),
-                            );
-                          },
-                        ).toList(),
+                        items: AppData.categories.map<DropdownMenuItem<String>>((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
                       ),
                     ),
                   ),
                   const SizedBox(height: 20),
 
+                  // Campo Note
                   TextFormField(
                     initialValue: _notes,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Note Personali',
-                      labelStyle: TextStyle(color: Colors.white70),
+                      labelStyle: TextStyle(color: AppData.antiFlashWhite.withOpacity(0.7)),
                       enabledBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(color: Colors.white54),
+                        borderSide: BorderSide(color: AppData.antiFlashWhite.withOpacity(0.5)),
                       ),
-                      focusedBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(color: Colors.white),
+                      focusedBorder: const UnderlineInputBorder(
+                        borderSide: BorderSide(color: AppData.antiFlashWhite),
                       ),
                     ),
-                    style: const TextStyle(color: Colors.white),
+                    style: const TextStyle(color: AppData.antiFlashWhite),
                     maxLines: 3,
                     onSaved: (value) {
-                      _notes = value!;
+                      _notes = value ?? '';
                     },
                   ),
                   const SizedBox(height: 20),
 
+                  // Switch Preferiti
                   Row(
                     children: [
                       Icon(
                         _isFavorite ? Icons.star : Icons.star_border,
-                        color: _isFavorite
-                            ? Colors.amberAccent
-                            : Colors.white70,
+                        // ICONA PREFERITI ACCESA -> CERISE
+                        color: _isFavorite ? AppData.cerise : AppData.antiFlashWhite.withOpacity(0.7),
                       ),
                       const SizedBox(width: 8),
                       Text(
                         'Aggiungi ai preferiti',
-                        style: Theme.of(
-                          context,
-                        ).textTheme.titleMedium?.copyWith(color: Colors.white),
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: AppData.antiFlashWhite, // TESTO SU SFONDO SCURO
+                        ),
                       ),
                       Switch(
                         value: _isFavorite,
@@ -616,28 +586,29 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                             _isFavorite = value;
                           });
                         },
-                        activeColor: Colors.amber,
-                        inactiveThumbColor: Colors.grey,
-                        inactiveTrackColor: Colors.grey.shade700,
+                        // SWITCH PREFERITI ACCESO -> CERISE
+                        activeColor: AppData.cerise,
+                        inactiveThumbColor: AppData.charcoal.withOpacity(0.5),
+                        inactiveTrackColor: AppData.charcoal.withOpacity(0.7),
                       ),
                     ],
                   ),
                   const SizedBox(height: 10),
 
+                  // Switch Da Ripetere
                   Row(
                     children: [
                       Icon(
                         _toBeRepeated ? Icons.repeat_on : Icons.repeat,
-                        color: _toBeRepeated
-                            ? Colors.greenAccent
-                            : Colors.white70,
+                        // ICONA DA RIPETERE ACCESA -> CERISE
+                        color: _toBeRepeated ? AppData.cerise : AppData.antiFlashWhite.withOpacity(0.7),
                       ),
                       const SizedBox(width: 8),
                       Text(
                         'Segna da ripetere',
-                        style: Theme.of(
-                          context,
-                        ).textTheme.titleMedium?.copyWith(color: Colors.white),
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: AppData.antiFlashWhite, // TESTO SU SFONDO SCURO
+                        ),
                       ),
                       Switch(
                         value: _toBeRepeated,
@@ -646,15 +617,16 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                             _toBeRepeated = value;
                           });
                         },
-                        activeColor: Colors.green,
-                        inactiveThumbColor: Colors.grey,
-                        inactiveTrackColor: Colors.grey.shade700,
+                        // SWITCH DA RIPETERE ACCESO -> CERISE
+                        activeColor: AppData.cerise,
+                        inactiveThumbColor: AppData.charcoal.withOpacity(0.5),
+                        inactiveTrackColor: AppData.charcoal.withOpacity(0.7),
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 20),
 
+                  // Sezione Immagini
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8.0),
                     child: Column(
@@ -662,19 +634,19 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                       children: [
                         Text(
                           'Immagini del viaggio:',
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            color: AppData.antiFlashWhite, // TESTO TITOLO SEZIONE
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         const SizedBox(height: 10),
 
+                        // Immagini esistenti
                         if (_existingImageUrls.isNotEmpty) ...[
-                          const Text(
+                          Text(
                             'Foto già caricate:',
                             style: TextStyle(
-                              color: Colors.white70,
+                              color: AppData.antiFlashWhite.withOpacity(0.7), // TESTO SECONDARIO
                               fontSize: 14,
                             ),
                           ),
@@ -685,10 +657,7 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                               scrollDirection: Axis.horizontal,
                               itemCount: _existingImageUrls.length,
                               itemBuilder: (ctx, index) {
-                                final String sanitizedImageUrl =
-                                    _sanitizeImagePath(
-                                      _existingImageUrls[index],
-                                    );
+                                final String sanitizedImageUrl = _sanitizeImagePath(_existingImageUrls[index]);
                                 return Padding(
                                   padding: const EdgeInsets.only(right: 8.0),
                                   child: Stack(
@@ -700,38 +669,32 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                                           width: 100,
                                           height: 100,
                                           fit: BoxFit.cover,
-                                          errorBuilder:
-                                              (context, error, stackTrace) {
-                                                print(
-                                                  'DEBUG - Errore caricamento immagine esistente in anteprima: $sanitizedImageUrl, Errore: $error',
-                                                );
-                                                return Container(
-                                                  width: 100,
-                                                  height: 100,
-                                                  color: Colors.grey[600],
-                                                  child: const Icon(
-                                                    Icons.broken_image,
-                                                    color: Colors.white70,
-                                                    size: 40,
-                                                  ),
-                                                );
-                                              },
+                                          errorBuilder: (context, error, stackTrace) {
+                                            debugPrint('DEBUG - Errore caricamento immagine esistente: $sanitizedImageUrl, Errore: $error');
+                                            return Container(
+                                              width: 100,
+                                              height: 100,
+                                              color: AppData.charcoal.withOpacity(0.6), // SFONDO ERRORE IMMAGINE
+                                              child: Icon(
+                                                Icons.broken_image,
+                                                color: AppData.antiFlashWhite.withOpacity(0.7), // ICONA ERRORE IMMAGINE
+                                                size: 40,
+                                              ),
+                                            );
+                                          },
                                         ),
                                       ),
                                       Positioned(
                                         top: 0,
                                         right: 0,
                                         child: GestureDetector(
-                                          onTap: () => _removeImage(
-                                            index,
-                                            isExisting: true,
-                                          ),
+                                          onTap: () => _removeImage(index, isExisting: true),
                                           child: const CircleAvatar(
                                             radius: 12,
-                                            backgroundColor: Colors.red,
+                                            backgroundColor: Colors.red, // COLORE CHIUSURA IMMAGINE
                                             child: Icon(
                                               Icons.close,
-                                              color: Colors.white,
+                                              color: AppData.antiFlashWhite, // ICONA CHIUSURA IMMAGINE
                                               size: 16,
                                             ),
                                           ),
@@ -746,22 +709,17 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                           const SizedBox(height: 10),
                         ],
 
+                        // Bottone per aggiungere nuove foto
                         ElevatedButton.icon(
                           onPressed: _pickImage,
-                          icon: const Icon(
-                            Icons.add_a_photo,
-                            color: Colors.white,
-                          ),
+                          icon: const Icon(Icons.add_a_photo, color: AppData.antiFlashWhite), // ICONA BOTTONE
                           label: const Text(
                             'Aggiungi Nuove Foto dalla Galleria',
-                            style: TextStyle(color: Colors.white),
+                            style: TextStyle(color: AppData.antiFlashWhite), // TESTO BOTTONE
                           ),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue.shade700,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 12,
-                            ),
+                            backgroundColor: AppData.silverLakeBlue, // COLORE PRIMARIO PER BOTTONE
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
@@ -769,6 +727,7 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                         ),
                         const SizedBox(height: 10),
 
+                        // Nuove immagini selezionate
                         if (_newImagePaths.isNotEmpty)
                           SizedBox(
                             height: 100,
@@ -776,8 +735,7 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                               scrollDirection: Axis.horizontal,
                               itemCount: _newImagePaths.length,
                               itemBuilder: (ctx, index) {
-                                final String sanitizedImageUrl =
-                                    _sanitizeImagePath(_newImagePaths[index]);
+                                final String sanitizedImageUrl = _sanitizeImagePath(_newImagePaths[index]);
                                 return Padding(
                                   padding: const EdgeInsets.only(right: 8.0),
                                   child: Stack(
@@ -789,22 +747,19 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                                           width: 100,
                                           height: 100,
                                           fit: BoxFit.cover,
-                                          errorBuilder:
-                                              (context, error, stackTrace) {
-                                                print(
-                                                  'DEBUG - Errore caricamento nuova immagine in anteprima: $sanitizedImageUrl, Errore: $error',
-                                                );
-                                                return Container(
-                                                  width: 100,
-                                                  height: 100,
-                                                  color: Colors.grey[600],
-                                                  child: const Icon(
-                                                    Icons.broken_image,
-                                                    color: Colors.white70,
-                                                    size: 40,
-                                                  ),
-                                                );
-                                              },
+                                          errorBuilder: (context, error, stackTrace) {
+                                            debugPrint('DEBUG - Errore caricamento nuova immagine: $sanitizedImageUrl, Errore: $error');
+                                            return Container(
+                                              width: 100,
+                                              height: 100,
+                                              color: AppData.charcoal.withOpacity(0.6),
+                                              child: Icon(
+                                                Icons.broken_image,
+                                                color: AppData.antiFlashWhite.withOpacity(0.7),
+                                                size: 40,
+                                              ),
+                                            );
+                                          },
                                         ),
                                       ),
                                       Positioned(
@@ -817,7 +772,7 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                                             backgroundColor: Colors.red,
                                             child: Icon(
                                               Icons.close,
-                                              color: Colors.white,
+                                              color: AppData.antiFlashWhite,
                                               size: 16,
                                             ),
                                           ),

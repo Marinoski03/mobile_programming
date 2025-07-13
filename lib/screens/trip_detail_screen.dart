@@ -8,6 +8,7 @@ import 'package:cached_network_image/cached_network_image.dart'; // Import per g
 import '../models/trip.dart';
 import '../helpers/trip_database_helper.dart';
 import 'add_edit_trip_screen.dart'; // Per la navigazione alla schermata di modifica
+import '../utils/app_data.dart'; // Importa AppData per i colori
 
 class TripDetailScreen extends StatefulWidget {
   final Trip trip;
@@ -52,7 +53,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
       final updatedTrip = await TripDatabaseHelper.instance.getTripById(
         _currentTrip.id!,
       );
-      if (mounted) { // Corretto: usa 'mounted' direttamente
+      if (mounted) {
         setState(() {
           _currentTrip = updatedTrip;
           _setCoverImage(); // Aggiorna l'immagine di copertina dopo il refresh
@@ -60,7 +61,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
       }
     } catch (e) {
       debugPrint('Errore durante il ricaricamento del viaggio: $e');
-      if (mounted) { // Corretto: usa 'mounted' direttamente
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Impossibile ricaricare i dettagli del viaggio: $e'),
@@ -75,17 +76,29 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Conferma Eliminazione'),
-        content: const Text('Sei sicuro di voler eliminare questo viaggio?'),
+        // Colori dell'AlertDialog (sfondo e testo) come da palette
+        backgroundColor: AppData.antiFlashWhite,
+        title: const Text(
+          'Conferma Eliminazione',
+          style: TextStyle(color: AppData.charcoal),
+        ),
+        content: const Text(
+          'Sei sicuro di voler eliminare questo viaggio?',
+          style: TextStyle(color: AppData.charcoal),
+        ),
         actions: <Widget>[
           TextButton(
-            child: const Text('Annulla'),
+            child: const Text(
+              'Annulla',
+              style: TextStyle(color: AppData.silverLakeBlue),
+            ),
             onPressed: () {
               Navigator.of(ctx).pop(false);
             },
           ),
           TextButton(
-            child: const Text('Elimina', style: TextStyle(color: Colors.red)),
+            // Colore del testo "Elimina" aggiornato a AppData.cerise
+            child: const Text('Elimina', style: TextStyle(color: AppData.cerise)),
             onPressed: () {
               Navigator.of(ctx).pop(true);
             },
@@ -97,16 +110,22 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
     if (confirmed == true) {
       try {
         await TripDatabaseHelper.instance.deleteTrip(_currentTrip.id!);
-        if (mounted) { // Corretto: usa 'mounted' direttamente
+        if (mounted) {
           Navigator.of(
             context,
           ).pop(true); // Indica che il viaggio è stato eliminato
         }
       } catch (e) {
         debugPrint('Errore durante l\'eliminazione del viaggio: $e');
-        if (mounted) { // Corretto: usa 'mounted' direttamente
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Errore durante l\'eliminazione: $e')),
+            SnackBar(
+              content: Text(
+                'Errore durante l\'eliminazione: $e',
+                style: const TextStyle(color: AppData.antiFlashWhite),
+              ),
+              backgroundColor: AppData.errorRed,
+            ),
           );
         }
       }
@@ -121,7 +140,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
       ),
     );
 
-    if (updatedTrip != null && mounted) { // Corretto: usa 'mounted' direttamente
+    if (updatedTrip != null && mounted) {
       setState(() {
         _currentTrip = updatedTrip as Trip; // Assicurati il tipo
         _setCoverImage(); // Aggiorna l'immagine di copertina
@@ -133,16 +152,18 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: Colors.transparent, // Lo sfondo sarà gestito dal Container sottostante
       appBar: AppBar(
         title: Text(
           _currentTrip.title,
-          style: const TextStyle(color: Colors.white),
+          // Colore del titolo aggiornato a AppData.antiFlashWhite
+          style: const TextStyle(color: AppData.antiFlashWhite),
         ),
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.transparent, // Mantenuta trasparente per il gradiente
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          // Colore dell'icona indietro aggiornato a AppData.antiFlashWhite
+          icon: const Icon(Icons.arrow_back, color: AppData.antiFlashWhite),
           onPressed: () {
             Navigator.of(context).pop();
           },
@@ -151,7 +172,8 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
           IconButton(
             icon: Icon(
               _currentTrip.isFavorite ? Icons.star : Icons.star_border,
-              color: Colors.white,
+              // Colore dell'icona preferito aggiornato a AppData.antiFlashWhite
+              color: AppData.antiFlashWhite,
             ),
             onPressed: () async {
               // Inverti lo stato di preferito e aggiorna il DB
@@ -169,11 +191,13 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.edit, color: Colors.white),
+            // Colore dell'icona modifica aggiornato a AppData.antiFlashWhite
+            icon: const Icon(Icons.edit, color: AppData.antiFlashWhite),
             onPressed: _editTrip,
           ),
           IconButton(
-            icon: const Icon(Icons.delete, color: Colors.white),
+            // Colore dell'icona elimina aggiornato a AppData.antiFlashWhite
+            icon: const Icon(Icons.delete, color: AppData.antiFlashWhite),
             onPressed: _deleteTrip,
           ),
         ],
@@ -182,8 +206,9 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
         width: double.infinity,
         height: double.infinity,
         decoration: BoxDecoration(
+          // Colori del gradiente aggiornati con AppData
           gradient: LinearGradient(
-            colors: [Colors.blue.shade300, Colors.blue.shade800],
+            colors: [AppData.silverLakeBlue.withOpacity(0.7), AppData.charcoal.withOpacity(0.9)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -204,7 +229,8 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.3),
+                        // Colore dell'ombra aggiornato a AppData.charcoal
+                        color: AppData.charcoal.withOpacity(0.3),
                         spreadRadius: 2,
                         blurRadius: 5,
                         offset: const Offset(0, 3),
@@ -212,14 +238,11 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                     ],
                   ),
                   child: ClipRRect(
-                    // Aggiunto ClipRRect per applicare il border radius all'immagine stessa
                     borderRadius: const BorderRadius.only(
                       bottomLeft: Radius.circular(20),
                       bottomRight: Radius.circular(20),
                     ),
-                    child: _buildCoverImageWidget(
-                      _coverImageUrl,
-                    ), // Usa il nuovo metodo di costruzione
+                    child: _buildCoverImageWidget(_coverImageUrl),
                   ),
                 ),
                 Padding(
@@ -231,7 +254,8 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                         _currentTrip.location,
                         style: Theme.of(context).textTheme.headlineMedium
                             ?.copyWith(
-                              color: Colors.white,
+                              // Colore del testo aggiornato a AppData.antiFlashWhite
+                              color: AppData.antiFlashWhite,
                               fontWeight: FontWeight.bold,
                             ),
                       ),
@@ -239,7 +263,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                       Text(
                         '${DateFormat('dd/MM/yyyy').format(_currentTrip.startDate)} - ${DateFormat('dd/MM/yyyy').format(_currentTrip.endDate)}',
                         style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(color: Colors.white70),
+                            ?.copyWith(color: AppData.antiFlashWhite.withOpacity(0.7)), // Colore aggiornato
                       ),
                       const SizedBox(height: 15),
                       Row(
@@ -251,14 +275,16 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                                     vertical: 5,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: Colors.amber.shade700,
+                                    // Colore del badge Preferito aggiornato a AppData.cerise
+                                    color: AppData.cerise,
                                     borderRadius: BorderRadius.circular(20),
                                   ),
                                   child: Row(
                                     children: [
+                                      // Colore dell'icona stella aggiornato a AppData.antiFlashWhite
                                       const Icon(
                                         Icons.star,
-                                        color: Colors.white,
+                                        color: AppData.antiFlashWhite,
                                         size: 18,
                                       ),
                                       const SizedBox(width: 5),
@@ -267,13 +293,13 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                                         style: Theme.of(context)
                                             .textTheme
                                             .bodyMedium
-                                            ?.copyWith(color: Colors.white),
+                                            ?.copyWith(color: AppData.antiFlashWhite), // Colore testo badge aggiornato
                                       ),
                                     ],
                                   ),
                                 )
-                              : const SizedBox.shrink(), // Non mostrare nulla se non è preferito
-                          const SizedBox(width: 10), // Spazio tra i bottoni
+                              : const SizedBox.shrink(),
+                          const SizedBox(width: 10),
 
                           _currentTrip.toBeRepeated
                               ? Container(
@@ -282,14 +308,16 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                                     vertical: 5,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: Colors.green.shade700,
+                                    // Colore del badge "Segna da ripetere" aggiornato a AppData.charcoal
+                                    color: AppData.charcoal,
                                     borderRadius: BorderRadius.circular(20),
                                   ),
                                   child: Row(
                                     children: [
+                                      // Colore dell'icona repeat aggiornato a AppData.antiFlashWhite
                                       const Icon(
                                         Icons.repeat,
-                                        color: Colors.white,
+                                        color: AppData.antiFlashWhite,
                                         size: 18,
                                       ),
                                       const SizedBox(width: 5),
@@ -298,12 +326,12 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                                         style: Theme.of(context)
                                             .textTheme
                                             .bodyMedium
-                                            ?.copyWith(color: Colors.white),
+                                            ?.copyWith(color: AppData.antiFlashWhite), // Colore testo badge aggiornato
                                       ),
                                     ],
                                   ),
                                 )
-                              : const SizedBox.shrink(), // Non mostrare nulla se non è da ripetere
+                              : const SizedBox.shrink(),
                         ],
                       ),
                       const SizedBox(height: 20),
@@ -311,14 +339,14 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                         'Categoria: ${_currentTrip.category}',
                         style: Theme.of(
                           context,
-                        ).textTheme.titleMedium?.copyWith(color: Colors.white),
+                        ).textTheme.titleMedium?.copyWith(color: AppData.antiFlashWhite), // Colore testo aggiornato
                       ),
                       const SizedBox(height: 10),
                       Text(
                         'Note personali:',
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(
-                              color: Colors.white,
+                              color: AppData.antiFlashWhite, // Colore testo aggiornato
                               fontWeight: FontWeight.bold,
                             ),
                       ),
@@ -328,13 +356,13 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                             : 'Nessuna nota aggiunta.',
                         style: Theme.of(
                           context,
-                        ).textTheme.bodyLarge?.copyWith(color: Colors.white70),
+                        ).textTheme.bodyLarge?.copyWith(color: AppData.antiFlashWhite.withOpacity(0.7)), // Colore testo aggiornato
                       ),
                       const SizedBox(height: 20),
                       Text(
                         'Galleria immagini:',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: Colors.white,
+                          color: AppData.antiFlashWhite, // Colore testo aggiornato
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -348,7 +376,6 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                                 itemBuilder: (ctx, index) {
                                   final String rawImageUrl =
                                       _currentTrip.imageUrls[index];
-                                  // SANITIZZA IL PERCORSO QUI
                                   final String imageUrl = _sanitizeImagePath(
                                     rawImageUrl,
                                   );
@@ -374,10 +401,13 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                                       width: 120,
                                       height: 120,
                                       fit: BoxFit.cover,
-                                      placeholder: (context, url) =>
-                                          const Center(
-                                            child: CircularProgressIndicator(),
-                                          ),
+                                      placeholder: (context, url) => Center(
+                                        child: CircularProgressIndicator(
+                                          // Colore indicatore aggiornato
+                                          valueColor: AlwaysStoppedAnimation<Color>(
+                                              AppData.antiFlashWhite),
+                                        ),
+                                      ),
                                       errorWidget: (context, url, error) {
                                         debugPrint(
                                           'Errore caricamento network galleria: $url, Errore: $error',
@@ -394,11 +424,13 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                                             ConnectionState.done) {
                                           if (snapshot.hasError ||
                                               !(snapshot.data ?? false)) {
+                                            // Il file non esiste o c'è stato un errore
                                             debugPrint(
                                               'Errore caricamento file locale galleria: $imageUrl, Errore: ${snapshot.error ?? "File non trovato"}',
                                             );
                                             return _buildGalleryErrorPlaceholder();
                                           } else {
+                                            // Il file esiste, caricalo
                                             return Image.file(
                                               File(imageUrl),
                                               width: 120,
@@ -414,8 +446,13 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                                             );
                                           }
                                         }
-                                        return const Center(
-                                          child: CircularProgressIndicator(),
+                                        // Mentre aspettiamo, mostra un indicatore di caricamento
+                                        return Center(
+                                          child: CircularProgressIndicator(
+                                            // Colore indicatore aggiornato
+                                            valueColor: AlwaysStoppedAnimation<Color>(
+                                                AppData.antiFlashWhite),
+                                          ),
                                         );
                                       },
                                     );
@@ -425,8 +462,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                                     padding: const EdgeInsets.only(right: 8.0),
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(10),
-                                      child:
-                                          imageWidget, // Usa il widget creato dinamicamente
+                                      child: imageWidget,
                                     ),
                                   );
                                 },
@@ -435,7 +471,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                           : Text(
                               'Nessuna immagine specifica aggiunta per questo viaggio.',
                               style: Theme.of(context).textTheme.bodyLarge
-                                  ?.copyWith(color: Colors.white70),
+                                  ?.copyWith(color: AppData.antiFlashWhite.withOpacity(0.7)), // Colore testo aggiornato
                             ),
                     ],
                   ),
@@ -466,8 +502,12 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
       return CachedNetworkImage(
         imageUrl: imageUrl,
         fit: BoxFit.cover,
-        placeholder: (context, url) =>
-            const Center(child: CircularProgressIndicator()),
+        placeholder: (context, url) => Center(
+          child: CircularProgressIndicator(
+            // Colore indicatore aggiornato
+            valueColor: AlwaysStoppedAnimation<Color>(AppData.antiFlashWhite),
+          ),
+        ),
         errorWidget: (context, url, error) {
           debugPrint('Errore caricamento network copertina: $url, Errore: $error');
           return _buildErrorPlaceholder();
@@ -501,7 +541,12 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
             }
           }
           // Mentre aspettiamo, mostra un indicatore di caricamento
-          return const Center(child: CircularProgressIndicator());
+          return Center(
+            child: CircularProgressIndicator(
+              // Colore indicatore aggiornato
+              valueColor: AlwaysStoppedAnimation<Color>(AppData.antiFlashWhite),
+            ),
+          );
         },
       );
     }
@@ -510,16 +555,19 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
   // Piccolo widget di utility per il placeholder in caso di errore (copertina)
   Widget _buildErrorPlaceholder() {
     return Container(
-      color: Colors.grey[800], // Sfondo scuro per indicare l'errore
-      child: const Center(
+      // Sfondo aggiornato a AppData.charcoal con opacità
+      color: AppData.charcoal.withOpacity(0.9),
+      child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.image_not_supported, color: Colors.white70, size: 60),
-            SizedBox(height: 8),
+            // Colore dell'icona aggiornato a AppData.antiFlashWhite con opacità
+            Icon(Icons.image_not_supported, color: AppData.antiFlashWhite.withOpacity(0.7), size: 60),
+            const SizedBox(height: 8),
+            // Colore del testo aggiornato a AppData.antiFlashWhite con opacità
             Text(
               'Immagine non trovata',
-              style: TextStyle(color: Colors.white70, fontSize: 16),
+              style: TextStyle(color: AppData.antiFlashWhite.withOpacity(0.7), fontSize: 16),
               textAlign: TextAlign.center,
             ),
           ],
@@ -533,8 +581,10 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
     return Container(
       width: 120,
       height: 120,
-      color: Colors.grey[700],
-      child: const Icon(Icons.broken_image, color: Colors.white70, size: 50),
+      // Sfondo aggiornato a AppData.charcoal con opacità
+      color: AppData.charcoal.withOpacity(0.8),
+      // Colore dell'icona aggiornato a AppData.antiFlashWhite con opacità
+      child: Icon(Icons.broken_image, color: AppData.antiFlashWhite.withOpacity(0.7), size: 50),
     );
   }
 }

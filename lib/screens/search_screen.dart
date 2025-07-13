@@ -6,6 +6,7 @@ import 'package:travel_diary_app/screens/trip_detail_screen.dart';
 
 import '../models/trip.dart';
 import '../helpers/trip_database_helper.dart';
+import '../utils/app_data.dart'; // Importa AppData per i colori
 
 class SearchScreen extends StatefulWidget {
   final String? initialCategory;
@@ -16,19 +17,7 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  // Define colors based on the home_screen palette
-  static const Color _gradientStartColor = Colors.blue;
-  static const Color _gradientEndColor = Color.fromARGB(
-    255,
-    13,
-    71,
-    161,
-  ); // A darker blue for consistency
-  static const Color _cardBackgroundColor = Colors.white;
-  static const Color _textColor =
-      Colors.black87; // Darker text for readability on white cards
-  static const Color _lightTextColor =
-      Colors.white70; // For text on gradient background
+  // Rimosse le definizioni di colore locali, useremo direttamente AppData
 
   final TextEditingController _searchController = TextEditingController();
   String _selectedCategoryFilter = 'Tutte';
@@ -58,11 +47,8 @@ class _SearchScreenState extends State<SearchScreen> {
     });
     try {
       final allTrips = await TripDatabaseHelper.instance.getAllTrips();
-      // MODIFICA 1: Applica .trim() alla categoria quando la estrai
-      final uniqueCategories = allTrips
-          .map((trip) => trip.category.trim())
-          .toSet()
-          .toList();
+      final uniqueCategories =
+          allTrips.map((trip) => trip.category.trim()).toSet().toList();
       uniqueCategories.sort();
 
       setState(() {
@@ -71,12 +57,10 @@ class _SearchScreenState extends State<SearchScreen> {
         _categories.addAll(uniqueCategories);
 
         if (widget.initialCategory != null) {
-          // MODIFICA 2: Applica .trim() anche a widget.initialCategory
           final sanitizedInitialCategory = widget.initialCategory!.trim();
           if (_categories.contains(sanitizedInitialCategory)) {
             _selectedCategoryFilter = sanitizedInitialCategory;
           } else {
-            // Fallback se initialCategory non è trovato nella lista pulita
             _selectedCategoryFilter = 'Tutte';
           }
         } else {
@@ -107,19 +91,15 @@ class _SearchScreenState extends State<SearchScreen> {
         final matchesTitle = trip.title.toLowerCase().contains(query);
         final matchesLocation = trip.location.toLowerCase().contains(query);
 
-        // MODIFICA 4: Assicurati che il confronto sia robusto anche qui
-        final matchesCategory =
-            _selectedCategoryFilter == 'Tutte' ||
+        final matchesCategory = _selectedCategoryFilter == 'Tutte' ||
             trip.category.trim().toLowerCase() ==
                 _selectedCategoryFilter.trim().toLowerCase();
 
-        final matchesStartDate =
-            _startDateFilter == null ||
+        final matchesStartDate = _startDateFilter == null ||
             (trip.startDate.isAtSameMomentAs(_startDateFilter!) ||
                 trip.startDate.isAfter(_startDateFilter!));
 
-        final matchesEndDate =
-            _endDateFilter == null ||
+        final matchesEndDate = _endDateFilter == null ||
             (trip.endDate.isAtSameMomentAs(_endDateFilter!) ||
                 trip.endDate.isBefore(_endDateFilter!));
 
@@ -141,15 +121,16 @@ class _SearchScreenState extends State<SearchScreen> {
         return Theme(
           data: ThemeData.light().copyWith(
             colorScheme: ColorScheme.light(
-              primary: _gradientEndColor, // A darker blue
-              onPrimary: Colors.white,
-              surface: _cardBackgroundColor, // White background for date picker
-              onSurface: _textColor, // Dark text on white
+              primary: AppData.silverLakeBlue, // Colore primario del date picker
+              onPrimary: AppData.antiFlashWhite,
+              surface:
+                  AppData.antiFlashWhite, // Sfondo bianco per il date picker
+              onSurface: AppData.charcoal, // Testo scuro su bianco
             ),
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(
                 foregroundColor:
-                    _gradientEndColor, // Color of "OK", "CANCEL" buttons
+                    AppData.silverLakeBlue, // Colore dei bottoni "OK", "ANNULLA"
               ),
             ),
           ),
@@ -179,45 +160,42 @@ class _SearchScreenState extends State<SearchScreen> {
     });
   }
 
-  // Helper per ottenere l'ImageProvider corretto, simile a TripDetailScreen e HomeScreen
-
   @override
   Widget build(BuildContext context) {
-    // Define shared input decoration style
+    // Define shared input decoration style using AppData colors
     final InputDecorationTheme inputDecorationTheme = InputDecorationTheme(
-      labelStyle: const TextStyle(color: _textColor), // Label text color
-      hintStyle: TextStyle(color: _textColor.withOpacity(0.7)),
-      prefixIconColor: _gradientEndColor,
-      suffixIconColor: _gradientEndColor,
+      labelStyle: const TextStyle(color: AppData.charcoal), // Colore del testo della label
+      hintStyle: TextStyle(color: AppData.charcoal.withOpacity(0.7)),
+      prefixIconColor: AppData.silverLakeBlue,
+      suffixIconColor: AppData.silverLakeBlue,
       floatingLabelStyle: const TextStyle(
-        color: _gradientEndColor,
-      ), // Label when focused
+        color: AppData.silverLakeBlue,
+      ), // Label quando è focused
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(
-          color: _gradientEndColor.withOpacity(0.5),
+          color: AppData.silverLakeBlue.withOpacity(0.5),
           width: 1.0,
-        ), // Border when not focused
+        ), // Bordo quando non è focused
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(
-          color: _gradientEndColor,
+          color: AppData.silverLakeBlue,
           width: 2.0,
-        ), // Border when focused
+        ), // Bordo quando è focused
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Colors.red, width: 1.0),
+        borderSide: const BorderSide(color: AppData.cerise, width: 1.0),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Colors.red, width: 2.0),
+        borderSide: const BorderSide(color: AppData.cerise, width: 2.0),
       ),
       filled: true,
-      fillColor: _cardBackgroundColor.withOpacity(
-        0.9,
-      ), // Slightly transparent white fill
+      fillColor:
+          AppData.antiFlashWhite.withOpacity(0.9), // Sfondo leggermente trasparente
       contentPadding: const EdgeInsets.symmetric(
         vertical: 14.0,
         horizontal: 16.0,
@@ -233,20 +211,24 @@ class _SearchScreenState extends State<SearchScreen> {
         title: const Text(
           'Cerca Viaggi',
           style: TextStyle(
-            color: Colors.white, // White text for AppBar title
+            color: AppData.antiFlashWhite, // Testo bianco per il titolo dell'AppBar
             fontWeight: FontWeight.bold,
           ),
         ),
         iconTheme: const IconThemeData(
-          color: Colors.white,
-        ), // Set back button color to white
+          color: AppData.antiFlashWhite,
+        ), // Colore del bottone indietro a bianco
       ),
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
+          // Gradiente con colori AppData
           gradient: LinearGradient(
-            colors: [_gradientStartColor, _gradientEndColor],
+            colors: [
+              AppData.silverLakeBlue.withOpacity(0.7),
+              AppData.charcoal.withOpacity(0.9)
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -257,23 +239,23 @@ class _SearchScreenState extends State<SearchScreen> {
             child: Column(
               children: [
                 Theme(
-                  // Apply input decoration theme to TextField
                   data: Theme.of(
                     context,
                   ).copyWith(inputDecorationTheme: inputDecorationTheme),
                   child: TextField(
                     controller: _searchController,
                     style: const TextStyle(
-                      color: _textColor,
-                    ), // Input text color
+                      color: AppData.charcoal,
+                    ), // Colore del testo di input
                     decoration: InputDecoration(
                       labelText: 'Cerca per località o titolo',
                       prefixIcon: const Icon(
                         Icons.search,
-                        color: _gradientEndColor,
+                        color: AppData.silverLakeBlue,
                       ),
                       suffixIcon: IconButton(
-                        icon: const Icon(Icons.clear, color: _gradientEndColor),
+                        icon:
+                            const Icon(Icons.clear, color: AppData.silverLakeBlue),
                         onPressed: () {
                           _searchController.clear();
                           _performSearch();
@@ -288,47 +270,44 @@ class _SearchScreenState extends State<SearchScreen> {
                   children: [
                     Expanded(
                       child: _isLoadingCategories
-                          ? const Center(
+                          ? Center(
                               child: CircularProgressIndicator(
                                 valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white,
+                                  AppData.antiFlashWhite, // Colore bianco per l'indicatore
                                 ),
                               ),
                             )
                           : Theme(
-                              // Apply input decoration theme to Dropdown
                               data: Theme.of(context).copyWith(
                                 inputDecorationTheme: inputDecorationTheme,
                               ),
                               child: DropdownButtonFormField<String>(
                                 value: _selectedCategoryFilter,
                                 style: const TextStyle(
-                                  color: _textColor,
-                                ), // Selected item text color
+                                  color: AppData.charcoal,
+                                ), // Colore del testo dell'elemento selezionato
                                 icon: const Icon(
                                   Icons.arrow_drop_down,
-                                  color: _gradientEndColor,
+                                  color: AppData.silverLakeBlue,
                                 ),
                                 decoration: const InputDecoration(
                                   labelText: 'Filtra per Categoria',
                                 ),
                                 dropdownColor:
-                                    _cardBackgroundColor, // Background of dropdown menu
+                                    AppData.antiFlashWhite, // Sfondo del menu a tendina
                                 items: _categories.map((String category) {
                                   return DropdownMenuItem<String>(
-                                    // MODIFICA 3: Assicurati che il valore del DropdownMenuItem sia pulito
                                     value: category.trim(),
                                     child: Text(
                                       category,
                                       style: const TextStyle(
-                                        color: _textColor,
-                                      ), // Dropdown menu item text color
+                                        color: AppData.charcoal,
+                                      ), // Colore del testo degli elementi del menu
                                     ),
                                   );
                                 }).toList(),
                                 onChanged: (String? newValue) {
                                   setState(() {
-                                    // MODIFICA 5: Assicurati che _selectedCategoryFilter sia pulito
                                     _selectedCategoryFilter = newValue!.trim();
                                     _performSearch();
                                   });
@@ -346,7 +325,6 @@ class _SearchScreenState extends State<SearchScreen> {
                         onTap: () => _selectDateFilter(context, true),
                         child: AbsorbPointer(
                           child: Theme(
-                            // Apply input decoration theme to Date fields
                             data: Theme.of(context).copyWith(
                               inputDecorationTheme: inputDecorationTheme,
                             ),
@@ -355,13 +333,13 @@ class _SearchScreenState extends State<SearchScreen> {
                                 labelText: 'Data Inizio (filtro)',
                                 prefixIcon: const Icon(
                                   Icons.calendar_today,
-                                  color: _gradientEndColor,
+                                  color: AppData.silverLakeBlue,
                                 ),
                                 suffixIcon: _startDateFilter != null
                                     ? IconButton(
                                         icon: const Icon(
                                           Icons.clear,
-                                          color: _gradientEndColor,
+                                          color: AppData.silverLakeBlue,
                                         ),
                                         onPressed: () {
                                           setState(() {
@@ -379,8 +357,8 @@ class _SearchScreenState extends State<SearchScreen> {
                                         'dd/MM/yyyy',
                                       ).format(_startDateFilter!),
                                 style: const TextStyle(
-                                  color: _textColor,
-                                ), // Displayed date text color
+                                  color: AppData.charcoal,
+                                ), // Colore del testo della data visualizzata
                               ),
                             ),
                           ),
@@ -393,7 +371,6 @@ class _SearchScreenState extends State<SearchScreen> {
                         onTap: () => _selectDateFilter(context, false),
                         child: AbsorbPointer(
                           child: Theme(
-                            // Apply input decoration theme to Date fields
                             data: Theme.of(context).copyWith(
                               inputDecorationTheme: inputDecorationTheme,
                             ),
@@ -402,13 +379,13 @@ class _SearchScreenState extends State<SearchScreen> {
                                 labelText: 'Data Fine (filtro)',
                                 prefixIcon: const Icon(
                                   Icons.calendar_today,
-                                  color: _gradientEndColor,
+                                  color: AppData.silverLakeBlue,
                                 ),
                                 suffixIcon: _endDateFilter != null
                                     ? IconButton(
                                         icon: const Icon(
                                           Icons.clear,
-                                          color: _gradientEndColor,
+                                          color: AppData.silverLakeBlue,
                                         ),
                                         onPressed: () {
                                           setState(() {
@@ -426,8 +403,8 @@ class _SearchScreenState extends State<SearchScreen> {
                                         'dd/MM/yyyy',
                                       ).format(_endDateFilter!),
                                 style: const TextStyle(
-                                  color: _textColor,
-                                ), // Displayed date text color
+                                  color: AppData.charcoal,
+                                ), // Colore del testo della data visualizzata
                               ),
                             ),
                           ),
@@ -443,26 +420,29 @@ class _SearchScreenState extends State<SearchScreen> {
                     onPressed: _clearFilters,
                     icon: const Icon(
                       Icons.filter_alt_off,
-                      color: Colors.white,
-                    ), // White icon
+                      color: AppData.antiFlashWhite,
+                    ), // Icona bianca
                     label: const Text(
                       'Cancella Filtri',
-                      style: TextStyle(color: Colors.white), // White text
+                      style:
+                          TextStyle(color: AppData.antiFlashWhite), // Testo bianco
                     ),
                     style: TextButton.styleFrom(
-                      foregroundColor: Colors.white, // For ripple effect
+                      foregroundColor:
+                          AppData.antiFlashWhite, // Per l'effetto ripple
                     ),
                   ),
                 ),
                 const SizedBox(height: 16),
                 Expanded(
                   child: _searchResults.isEmpty
-                      ? const Center(
+                      ? Center(
                           child: Text(
                             'Nessun risultato trovato per i filtri selezionati.',
                             style: TextStyle(
-                              color: _lightTextColor,
-                            ), // White text for empty results
+                              color: AppData.antiFlashWhite
+                                  .withOpacity(0.7), // Testo bianco per risultati vuoti
+                            ),
                           ),
                         )
                       : ListView.builder(
@@ -470,18 +450,17 @@ class _SearchScreenState extends State<SearchScreen> {
                           itemBuilder: (context, index) {
                             final trip = _searchResults[index];
                             return Card(
-                              color:
-                                  _cardBackgroundColor, // Card background white
+                              color: AppData.antiFlashWhite, // Sfondo Card bianco
                               margin: const EdgeInsets.symmetric(vertical: 8.0),
                               elevation: 4,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(
                                   12,
-                                ), // Consistent rounding
+                                ), // Arrotondamento consistente
                                 side: BorderSide(
-                                  color: Colors.blue.shade200,
+                                  color: AppData.silverLakeBlue.withOpacity(0.5),
                                   width: 1,
-                                ), // Subtle border
+                                ), // Bordo sottile
                               ),
                               child: InkWell(
                                 onTap: () async {
@@ -511,8 +490,8 @@ class _SearchScreenState extends State<SearchScreen> {
                                                   .titleLarge
                                                   ?.copyWith(
                                                     fontWeight: FontWeight.bold,
-                                                    color:
-                                                        _textColor, // Dark text for title
+                                                    color: AppData
+                                                        .charcoal, // Testo scuro per il titolo
                                                   ),
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
@@ -524,9 +503,9 @@ class _SearchScreenState extends State<SearchScreen> {
                                                   .textTheme
                                                   .titleMedium
                                                   ?.copyWith(
-                                                    color: _textColor.withOpacity(
+                                                    color: AppData.charcoal.withOpacity(
                                                       0.8,
-                                                    ), // Slightly lighter dark
+                                                    ), // Scuro leggermente più chiaro
                                                   ),
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
@@ -538,8 +517,8 @@ class _SearchScreenState extends State<SearchScreen> {
                                                   .textTheme
                                                   .bodyMedium
                                                   ?.copyWith(
-                                                    color:
-                                                        _gradientEndColor, // Blue for dates
+                                                    color: AppData
+                                                        .silverLakeBlue, // Blu per le date
                                                   ),
                                             ),
                                             Text(
@@ -548,10 +527,10 @@ class _SearchScreenState extends State<SearchScreen> {
                                                   .textTheme
                                                   .bodySmall
                                                   ?.copyWith(
-                                                    color: _gradientEndColor
+                                                    color: AppData.silverLakeBlue
                                                         .withOpacity(
                                                           0.8,
-                                                        ), // Blue for category
+                                                        ), // Blu per la categoria
                                                   ),
                                             ),
                                           ],
