@@ -12,7 +12,7 @@ import 'dart:async';
 
 import '../models/trip.dart';
 import '../helpers/trip_database_helper.dart';
-import '../utils/app_data.dart'; 
+import '../utils/app_data.dart';
 
 class AddEditTripScreen extends StatefulWidget {
   final Trip? trip;
@@ -58,7 +58,7 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
       _notes = widget.trip!.notes;
       _isFavorite = widget.trip!.isFavorite;
       _toBeRepeated = widget.trip!.toBeRepeated;
-      
+
       for (String url in widget.trip!.imageUrls) {
         _existingImageUrls.add(_sanitizeImagePath(url));
       }
@@ -88,6 +88,24 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
       initialDate: isStart ? _startDate : _endDate,
       firstDate: DateTime(2000),
       lastDate: DateTime(2101),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: AppData.silverLakeBlue, // Header background color
+              onPrimary: AppData.antiFlashWhite, // Header text color
+              surface: AppData.antiFlashWhite, // Calendar background color
+              onSurface: AppData.charcoal, // Calendar text color
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: AppData.silverLakeBlue, // OK/Cancel button text color
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
     ).then((pickedDate) {
       if (pickedDate == null) {
         return;
@@ -284,24 +302,24 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppData.antiFlashWhite,
+      backgroundColor: AppData.antiFlashWhite, // Scaffold background color
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: Text(
           widget.trip == null ? 'Aggiungi Viaggio' : 'Modifica Viaggio',
-          style: const TextStyle(color: AppData.antiFlashWhite),
+          style: const TextStyle(color: AppData.antiFlashWhite), // Text color for app bar title
         ),
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.transparent, // AppBar background transparent for gradient
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppData.antiFlashWhite),
+          icon: const Icon(Icons.arrow_back, color: AppData.antiFlashWhite), // Icon color
           onPressed: () {
             Navigator.of(context).pop();
           },
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.save, color: AppData.antiFlashWhite),
+            icon: const Icon(Icons.save, color: AppData.antiFlashWhite), // Icon color
             onPressed: _saveTrip,
           ),
         ],
@@ -312,8 +330,8 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              AppData.silverLakeBlue.withOpacity(0.7),
-              AppData.charcoal.withOpacity(0.9)
+              AppData.silverLakeBlue.withOpacity(0.7), // Gradient start color
+              AppData.charcoal.withOpacity(0.9) // Gradient end color
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -331,15 +349,15 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                     initialValue: _title,
                     decoration: InputDecoration(
                       labelText: 'Titolo del Viaggio',
-                      labelStyle: TextStyle(color: AppData.antiFlashWhite.withOpacity(0.7)),
+                      labelStyle: TextStyle(color: AppData.antiFlashWhite.withOpacity(0.7)), // Label text color
                       enabledBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(color: AppData.antiFlashWhite.withOpacity(0.5)),
+                        borderSide: BorderSide(color: AppData.antiFlashWhite.withOpacity(0.5)), // Enabled border color
                       ),
                       focusedBorder: const UnderlineInputBorder(
-                        borderSide: BorderSide(color: AppData.antiFlashWhite),
+                        borderSide: BorderSide(color: AppData.antiFlashWhite), // Focused border color
                       ),
                     ),
-                    style: const TextStyle(color: AppData.antiFlashWhite),
+                    style: const TextStyle(color: AppData.antiFlashWhite), // Input text color
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Inserisci un titolo per il viaggio';
@@ -356,30 +374,30 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                     controller: _locationSearchController,
                     decoration: InputDecoration(
                       labelText: 'Cerca Nazione / Città',
-                      labelStyle: const TextStyle(color: AppData.antiFlashWhite),
+                      labelStyle: const TextStyle(color: AppData.antiFlashWhite), // Label text color
                       enabledBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(color: AppData.antiFlashWhite.withOpacity(0.5)),
+                        borderSide: BorderSide(color: AppData.antiFlashWhite.withOpacity(0.5)), // Enabled border color
                       ),
                       focusedBorder: const UnderlineInputBorder(
-                        borderSide: BorderSide(color: AppData.antiFlashWhite),
+                        borderSide: BorderSide(color: AppData.antiFlashWhite), // Focused border color
                       ),
                       suffixIcon: _locationSearchController.text.isNotEmpty
                           ? IconButton(
-                              icon: Icon(
-                                Icons.clear,
-                                color: AppData.antiFlashWhite.withOpacity(0.7),
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  _locationSearchController.clear();
-                                  _selectedLocation = '';
-                                  _locationSuggestions = [];
-                                });
-                              },
-                            )
+                        icon: Icon(
+                          Icons.clear,
+                          color: AppData.antiFlashWhite.withOpacity(0.7), // Clear icon color
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _locationSearchController.clear();
+                            _selectedLocation = '';
+                            _locationSuggestions = [];
+                          });
+                        },
+                      )
                           : null,
                     ),
-                    style: const TextStyle(color: AppData.antiFlashWhite),
+                    style: const TextStyle(color: AppData.antiFlashWhite), // Input text color
                     onChanged: _onLocationSearchChanged,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -391,12 +409,12 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                       _selectedLocation = value ?? '';
                     },
                   ),
-                  
+
                   if (_locationSuggestions.isNotEmpty)
                     Container(
                       constraints: const BoxConstraints(maxHeight: 200),
                       decoration: BoxDecoration(
-                        color: AppData.charcoal.withOpacity(0.8), 
+                        color: AppData.charcoal.withOpacity(0.8), // Suggestions box background
                         borderRadius: BorderRadius.circular(8.0),
                       ),
                       child: ListView.builder(
@@ -407,7 +425,7 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                           return ListTile(
                             title: Text(
                               suggestion['display_name'] ?? '',
-                              style: const TextStyle(color: AppData.antiFlashWhite), 
+                              style: const TextStyle(color: AppData.antiFlashWhite), // Suggestion text color
                             ),
                             onTap: () => _selectLocationSuggestion(suggestion),
                           );
@@ -425,18 +443,18 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                           child: InputDecorator(
                             decoration: InputDecoration(
                               labelText: 'Data Inizio',
-                              labelStyle: TextStyle(color: AppData.antiFlashWhite.withOpacity(0.7)),
+                              labelStyle: TextStyle(color: AppData.antiFlashWhite.withOpacity(0.7)), // Label text color
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8.0),
-                                borderSide: BorderSide(color: AppData.antiFlashWhite.withOpacity(0.5)),
+                                borderSide: BorderSide(color: AppData.antiFlashWhite.withOpacity(0.5)), // Border color
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8.0),
-                                borderSide: BorderSide(color: AppData.antiFlashWhite.withOpacity(0.5)),
+                                borderSide: BorderSide(color: AppData.antiFlashWhite.withOpacity(0.5)), // Enabled border color
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8.0),
-                                borderSide: const BorderSide(color: AppData.antiFlashWhite),
+                                borderSide: const BorderSide(color: AppData.antiFlashWhite), // Focused border color
                               ),
                             ),
                             child: Row(
@@ -444,9 +462,9 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                               children: [
                                 Text(
                                   DateFormat('dd/MM/yyyy').format(_startDate),
-                                  style: const TextStyle(color: AppData.antiFlashWhite),
+                                  style: const TextStyle(color: AppData.antiFlashWhite), // Date text color
                                 ),
-                                const Icon(Icons.calendar_today, color: AppData.antiFlashWhite),
+                                const Icon(Icons.calendar_today, color: AppData.antiFlashWhite), // Icon color
                               ],
                             ),
                           ),
@@ -459,18 +477,18 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                           child: InputDecorator(
                             decoration: InputDecoration(
                               labelText: 'Data Fine',
-                              labelStyle: TextStyle(color: AppData.antiFlashWhite.withOpacity(0.7)),
+                              labelStyle: TextStyle(color: AppData.antiFlashWhite.withOpacity(0.7)), // Label text color
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8.0),
-                                borderSide: BorderSide(color: AppData.antiFlashWhite.withOpacity(0.5)),
+                                borderSide: BorderSide(color: AppData.antiFlashWhite.withOpacity(0.5)), // Border color
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8.0),
-                                borderSide: BorderSide(color: AppData.antiFlashWhite.withOpacity(0.5)),
+                                borderSide: BorderSide(color: AppData.antiFlashWhite.withOpacity(0.5)), // Enabled border color
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8.0),
-                                borderSide: const BorderSide(color: AppData.antiFlashWhite),
+                                borderSide: const BorderSide(color: AppData.antiFlashWhite), // Focused border color
                               ),
                             ),
                             child: Row(
@@ -478,9 +496,9 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                               children: [
                                 Text(
                                   DateFormat('dd/MM/yyyy').format(_endDate),
-                                  style: const TextStyle(color: AppData.antiFlashWhite),
+                                  style: const TextStyle(color: AppData.antiFlashWhite), // Date text color
                                 ),
-                                const Icon(Icons.calendar_today, color: AppData.antiFlashWhite),
+                                const Icon(Icons.calendar_today, color: AppData.antiFlashWhite), // Icon color
                               ],
                             ),
                           ),
@@ -494,26 +512,26 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                   InputDecorator(
                     decoration: InputDecoration(
                       labelText: 'Categoria',
-                      labelStyle: TextStyle(color: AppData.antiFlashWhite.withOpacity(0.7)),
+                      labelStyle: TextStyle(color: AppData.antiFlashWhite.withOpacity(0.7)), // Label text color
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8.0),
-                        borderSide: BorderSide(color: AppData.antiFlashWhite.withOpacity(0.5)),
+                        borderSide: BorderSide(color: AppData.antiFlashWhite.withOpacity(0.5)), // Border color
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8.0),
-                        borderSide: BorderSide(color: AppData.antiFlashWhite.withOpacity(0.5)),
+                        borderSide: BorderSide(color: AppData.antiFlashWhite.withOpacity(0.5)), // Enabled border color
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8.0),
-                        borderSide: const BorderSide(color: AppData.antiFlashWhite),
+                        borderSide: const BorderSide(color: AppData.antiFlashWhite), // Focused border color
                       ),
                     ),
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<String>(
                         value: _category,
-                        dropdownColor: AppData.charcoal.withOpacity(0.9), // SFONDO DROPDOWN
-                        icon: const Icon(Icons.arrow_drop_down, color: AppData.antiFlashWhite),
-                        style: const TextStyle(color: AppData.antiFlashWhite, fontSize: 16),
+                        dropdownColor: AppData.charcoal.withOpacity(0.9), // Dropdown background color
+                        icon: const Icon(Icons.arrow_drop_down, color: AppData.antiFlashWhite), // Dropdown icon color
+                        style: const TextStyle(color: AppData.antiFlashWhite, fontSize: 16), // Dropdown text style
                         onChanged: (String? newValue) {
                           setState(() {
                             _category = newValue!;
@@ -535,15 +553,15 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                     initialValue: _notes,
                     decoration: InputDecoration(
                       labelText: 'Note Personali',
-                      labelStyle: TextStyle(color: AppData.antiFlashWhite.withOpacity(0.7)),
+                      labelStyle: TextStyle(color: AppData.antiFlashWhite.withOpacity(0.7)), // Label text color
                       enabledBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(color: AppData.antiFlashWhite.withOpacity(0.5)),
+                        borderSide: BorderSide(color: AppData.antiFlashWhite.withOpacity(0.5)), // Enabled border color
                       ),
                       focusedBorder: const UnderlineInputBorder(
-                        borderSide: BorderSide(color: AppData.antiFlashWhite),
+                        borderSide: BorderSide(color: AppData.antiFlashWhite), // Focused border color
                       ),
                     ),
-                    style: const TextStyle(color: AppData.antiFlashWhite),
+                    style: const TextStyle(color: AppData.antiFlashWhite), // Input text color
                     maxLines: 3,
                     onSaved: (value) {
                       _notes = value ?? '';
@@ -555,13 +573,13 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                     children: [
                       Icon(
                         _isFavorite ? Icons.star : Icons.star_border,
-                        color: _isFavorite ? AppData.cerise : AppData.antiFlashWhite.withOpacity(0.7),
+                        color: _isFavorite ? AppData.cerise : AppData.antiFlashWhite.withOpacity(0.7), // Icon color for favorite
                       ),
                       const SizedBox(width: 8),
                       Text(
                         'Aggiungi ai preferiti',
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: AppData.antiFlashWhite, 
+                          color: AppData.antiFlashWhite, // Text color for "Add to favorites"
                         ),
                       ),
                       Switch(
@@ -571,9 +589,9 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                             _isFavorite = value;
                           });
                         },
-                        activeColor: AppData.cerise,
-                        inactiveThumbColor: AppData.charcoal.withOpacity(0.5),
-                        inactiveTrackColor: AppData.charcoal.withOpacity(0.7),
+                        activeColor: AppData.cerise, // Active color for switch
+                        inactiveThumbColor: AppData.charcoal.withOpacity(0.5), // Inactive thumb color
+                        inactiveTrackColor: AppData.charcoal.withOpacity(0.7), // Inactive track color
                       ),
                     ],
                   ),
@@ -583,13 +601,13 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                     children: [
                       Icon(
                         _toBeRepeated ? Icons.repeat_on : Icons.repeat,
-                        color: _toBeRepeated ? AppData.cerise : AppData.antiFlashWhite.withOpacity(0.7),
+                        color: _toBeRepeated ? AppData.cerise : AppData.antiFlashWhite.withOpacity(0.7), // Icon color for repeat
                       ),
                       const SizedBox(width: 8),
                       Text(
                         'Segna da ripetere',
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: AppData.antiFlashWhite, 
+                          color: AppData.antiFlashWhite, // Text color for "Mark to repeat"
                         ),
                       ),
                       Switch(
@@ -599,9 +617,9 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                             _toBeRepeated = value;
                           });
                         },
-                        activeColor: AppData.cerise,
-                        inactiveThumbColor: AppData.charcoal.withOpacity(0.5),
-                        inactiveTrackColor: AppData.charcoal.withOpacity(0.7),
+                        activeColor: AppData.cerise, // Active color for switch
+                        inactiveThumbColor: AppData.charcoal.withOpacity(0.5), // Inactive thumb color
+                        inactiveTrackColor: AppData.charcoal.withOpacity(0.7), // Inactive track color
                       ),
                     ],
                   ),
@@ -615,7 +633,7 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                         Text(
                           'Immagini del viaggio:',
                           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: AppData.antiFlashWhite, 
+                            color: AppData.antiFlashWhite, // Text color for "Travel images" title
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -626,7 +644,7 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                           Text(
                             'Foto già caricate:',
                             style: TextStyle(
-                              color: AppData.antiFlashWhite.withOpacity(0.7), 
+                              color: AppData.antiFlashWhite.withOpacity(0.7), // Text color for "Photos already uploaded"
                               fontSize: 14,
                             ),
                           ),
@@ -654,10 +672,10 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                                             return Container(
                                               width: 100,
                                               height: 100,
-                                              color: AppData.charcoal.withOpacity(0.6), 
+                                              color: AppData.charcoal.withOpacity(0.6), // Error image background
                                               child: Icon(
                                                 Icons.broken_image,
-                                                color: AppData.antiFlashWhite.withOpacity(0.7), 
+                                                color: AppData.antiFlashWhite.withOpacity(0.7), // Error image icon
                                                 size: 40,
                                               ),
                                             );
@@ -671,10 +689,10 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                                           onTap: () => _removeImage(index, isExisting: true),
                                           child: const CircleAvatar(
                                             radius: 12,
-                                            backgroundColor: Colors.red, 
+                                            backgroundColor: Colors.red, // Remove button background
                                             child: Icon(
                                               Icons.close,
-                                              color: AppData.antiFlashWhite, 
+                                              color: AppData.antiFlashWhite, // Remove button icon color
                                               size: 16,
                                             ),
                                           ),
@@ -691,13 +709,13 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
 
                         ElevatedButton.icon(
                           onPressed: _pickImage,
-                          icon: const Icon(Icons.add_a_photo, color: AppData.antiFlashWhite), 
+                          icon: const Icon(Icons.add_a_photo, color: AppData.antiFlashWhite), // Button icon color
                           label: const Text(
                             'Aggiungi Nuove Foto dalla Galleria',
-                            style: TextStyle(color: AppData.antiFlashWhite), 
+                            style: TextStyle(color: AppData.antiFlashWhite), // Button text color
                           ),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppData.silverLakeBlue, 
+                            backgroundColor: AppData.silverLakeBlue, // Button background color
                             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
@@ -731,10 +749,10 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                                             return Container(
                                               width: 100,
                                               height: 100,
-                                              color: AppData.charcoal.withOpacity(0.6),
+                                              color: AppData.charcoal.withOpacity(0.6), // Error image background
                                               child: Icon(
                                                 Icons.broken_image,
-                                                color: AppData.antiFlashWhite.withOpacity(0.7),
+                                                color: AppData.antiFlashWhite.withOpacity(0.7), // Error image icon
                                                 size: 40,
                                               ),
                                             );
@@ -748,10 +766,10 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                                           onTap: () => _removeImage(index),
                                           child: const CircleAvatar(
                                             radius: 12,
-                                            backgroundColor: Colors.red,
+                                            backgroundColor: Colors.red, // Remove button background
                                             child: Icon(
                                               Icons.close,
-                                              color: AppData.antiFlashWhite,
+                                              color: AppData.antiFlashWhite, // Remove button icon color
                                               size: 16,
                                             ),
                                           ),

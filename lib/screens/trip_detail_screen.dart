@@ -8,7 +8,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../models/trip.dart';
 import '../helpers/trip_database_helper.dart';
 import 'add_edit_trip_screen.dart';
-import '../utils/app_data.dart'; 
+import '../utils/app_data.dart';
 
 class TripDetailScreen extends StatefulWidget {
   final Trip trip;
@@ -44,33 +44,30 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
   }
 
   Future<void> _refreshTripDetails() async {
-    try {
-      final updatedTrip = await TripDatabaseHelper.instance.getTripById(
-        _currentTrip.id!,
-      );
-      if (mounted) {
-        setState(() {
-          _currentTrip = updatedTrip;
-          _setCoverImage();
-        });
-      }
-    } catch (e) {
-      debugPrint('Errore durante il ricaricamento del viaggio: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Impossibile ricaricare i dettagli del viaggio: $e'),
-          ),
-        );
-      }
+    final updatedTrip =
+    await TripDatabaseHelper.instance.getTripById(_currentTrip.id!);
+    if (updatedTrip != null) {
+      setState(() {
+        _currentTrip = updatedTrip;
+        _setCoverImage();
+      });
     }
   }
 
-  void _deleteTrip() async {
-    final confirmed = await showDialog<bool>(
+  Future<void> _navigateToEditScreen() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddEditTripScreen(trip: _currentTrip),
+      ),
+    );
+    _refreshTripDetails();
+  }
+
+  Future<void> _confirmDelete() async {
+    final bool? confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppData.antiFlashWhite,
         title: const Text(
           'Conferma Eliminazione',
           style: TextStyle(color: AppData.charcoal),
@@ -79,383 +76,247 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
           'Sei sicuro di voler eliminare questo viaggio?',
           style: TextStyle(color: AppData.charcoal),
         ),
-        actions: <Widget>[
+        backgroundColor: AppData.antiFlashWhite,
+        actions: [
           TextButton(
-            child: const Text(
-              'Annulla',
-              style: TextStyle(color: AppData.silverLakeBlue),
-            ),
-            onPressed: () {
-              Navigator.of(ctx).pop(false);
-            },
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Annulla',
+                style: TextStyle(color: AppData.silverLakeBlue)),
           ),
           TextButton(
-            child: const Text('Elimina', style: TextStyle(color: AppData.cerise)),
-            onPressed: () {
-              Navigator.of(ctx).pop(true);
-            },
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child:
+            const Text('Elimina', style: TextStyle(color: AppData.cerise)),
           ),
         ],
       ),
     );
 
-    if (confirmed == true) {
-      try {
-        await TripDatabaseHelper.instance.deleteTrip(_currentTrip.id!);
-        if (mounted) { 
-          Navigator.of(
-            context,
-          ).pop(true);
-        }
-      } catch (e) {
-        debugPrint('Errore durante l\'eliminazione del viaggio: $e');
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Errore durante l\'eliminazione: $e',
-                style: const TextStyle(color: AppData.antiFlashWhite),
-              ),
-              backgroundColor: AppData.errorRed,
-            ),
-          );
-        }
+    if (confirm == true) {
+      await TripDatabaseHelper.instance.deleteTrip(_currentTrip.id!);
+      if (mounted) {
+        Navigator.of(context).pop();
       }
-    }
-  }
-
-  void _editTrip() async {
-    final updatedTrip = await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (ctx) => AddEditTripScreen(trip: _currentTrip),
-      ),
-    );
-
-    if (updatedTrip != null && mounted) {
-      setState(() {
-        _currentTrip = updatedTrip as Trip;
-        _setCoverImage();
-      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      backgroundColor: Colors.transparent, 
-      appBar: AppBar(
-        title: Text(
-          _currentTrip.title,
-          style: const TextStyle(color: AppData.antiFlashWhite),
-        ),
-        backgroundColor: Colors.transparent, 
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppData.antiFlashWhite),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(
-              _currentTrip.isFavorite ? Icons.star : Icons.star_border,
+      backgroundColor: AppData.antiFlashWhite,
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 250.0,
+            floating: false,
+            pinned: true,
+            backgroundColor: AppData.silverLakeBlue,
+            flexibleSpace: FlexibleSpaceBar(
+              titlePadding:
+              const EdgeInsets.only(left: 16.0, bottom: 16.0, right: 16.0),
+              centerTitle: false,
+              title: Text(
+                _currentTrip.title,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  color: AppData.antiFlashWhite,
+                  fontWeight: FontWeight.bold,
+                  shadows: [
+                    Shadow(
+                      offset: const Offset(1.0, 1.0),
+                      blurRadius: 3.0,
+                      color: AppData.charcoal.withOpacity(0.5),
+                    ),
+                  ],
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              background: _buildCoverImage(_coverImageUrl),
+            ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.edit, color: AppData.antiFlashWhite),
+                onPressed: _navigateToEditScreen,
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete, color: AppData.antiFlashWhite),
+                onPressed: _confirmDelete,
+              ),
+            ],
+            iconTheme: const IconThemeData(
               color: AppData.antiFlashWhite,
             ),
-            onPressed: () async {
-              final updatedTrip = _currentTrip.copy(
-                isFavorite: !_currentTrip.isFavorite,
-              );
-              try {
-                await TripDatabaseHelper.instance.updateTrip(updatedTrip);
-                setState(() {
-                  _currentTrip = updatedTrip;
-                });
-              } catch (e) {
-                debugPrint('Errore nell\'aggiornare lo stato di preferito: $e');
-              }
-            },
           ),
-          IconButton(
-            icon: const Icon(Icons.edit, color: AppData.antiFlashWhite),
-            onPressed: _editTrip,
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete, color: AppData.antiFlashWhite),
-            onPressed: _deleteTrip,
-          ),
-        ],
-      ),
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [AppData.silverLakeBlue.withOpacity(0.7), AppData.charcoal.withOpacity(0.9)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  height: 250,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.only(
-                      bottomLeft: Radius.circular(20),
-                      bottomRight: Radius.circular(20),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppData.charcoal.withOpacity(0.3),
-                        spreadRadius: 2,
-                        blurRadius: 5,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: const BorderRadius.only(
-                      bottomLeft: Radius.circular(20),
-                      bottomRight: Radius.circular(20),
-                    ),
-                    child: _buildCoverImageWidget(_coverImageUrl),
-                  ),
-                ),
-                Padding(
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                return Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      _buildDetailRow(
+                        context,
+                        Icons.location_on,
+                        'Località:',
                         _currentTrip.location,
-                        style: Theme.of(context).textTheme.headlineMedium
-                            ?.copyWith(
-                              color: AppData.antiFlashWhite,
-                              fontWeight: FontWeight.bold,
-                            ),
                       ),
-                      const SizedBox(height: 5),
-                      Text(
+                      _buildDetailRow(
+                        context,
+                        Icons.date_range,
+                        'Date:',
                         '${DateFormat('dd/MM/yyyy').format(_currentTrip.startDate)} - ${DateFormat('dd/MM/yyyy').format(_currentTrip.endDate)}',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(color: AppData.antiFlashWhite.withOpacity(0.7)), 
                       ),
-                      const SizedBox(height: 15),
-                      Row(
-                        children: [
-                          _currentTrip.isFavorite
-                              ? Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 5,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: AppData.cerise,
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      const Icon(
-                                        Icons.star,
-                                        color: AppData.antiFlashWhite,
-                                        size: 18,
-                                      ),
-                                      const SizedBox(width: 5),
-                                      Text(
-                                        'Preferito',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium
-                                            ?.copyWith(color: AppData.antiFlashWhite), 
-                                      ),
-                                    ],
-                                  ),
-                                )
-                              : const SizedBox.shrink(),
-                          const SizedBox(width: 10),
-
-                          _currentTrip.toBeRepeated
-                              ? Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 5,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: AppData.charcoal,
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      const Icon(
-                                        Icons.repeat,
-                                        color: AppData.antiFlashWhite,
-                                        size: 18,
-                                      ),
-                                      const SizedBox(width: 5),
-                                      Text(
-                                        'Segna da ripetere',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium
-                                            ?.copyWith(color: AppData.antiFlashWhite), 
-                                      ),
-                                    ],
-                                  ),
-                                )
-                              : const SizedBox.shrink(),
-                        ],
+                      _buildDetailRow(
+                        context,
+                        Icons.category,
+                        'Categoria:',
+                        _currentTrip.category,
                       ),
-                      const SizedBox(height: 20),
-                      Text(
-                        'Categoria: ${_currentTrip.category}',
-                        style: Theme.of(
-                          context,
-                        ).textTheme.titleMedium?.copyWith(color: AppData.antiFlashWhite), 
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        'Note personali:',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(
-                              color: AppData.antiFlashWhite, 
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                      Text(
+                      _buildDetailRow(
+                        context,
+                        Icons.notes,
+                        'Note:',
                         _currentTrip.notes.isNotEmpty
                             ? _currentTrip.notes
                             : 'Nessuna nota aggiunta.',
-                        style: Theme.of(
-                          context,
-                        ).textTheme.bodyLarge?.copyWith(color: AppData.antiFlashWhite.withOpacity(0.7)), 
+                      ),
+                      _buildDetailRow(
+                        context,
+                        _currentTrip.isFavorite
+                            ? Icons.star
+                            : Icons.star_border,
+                        'Preferito:',
+                        _currentTrip.isFavorite ? 'Sì' : 'No',
+                        iconColor:
+                        _currentTrip.isFavorite ? Colors.amber : null,
+                      ),
+                      _buildDetailRow(
+                        context,
+                        _currentTrip.toBeRepeated
+                            ? Icons.repeat_on
+                            : Icons.repeat,
+                        'Da ripetere:',
+                        _currentTrip.toBeRepeated ? 'Sì' : 'No',
+                        iconColor:
+                        _currentTrip.toBeRepeated ? AppData.cerise : null,
                       ),
                       const SizedBox(height: 20),
                       Text(
-                        'Galleria immagini:',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: AppData.antiFlashWhite, 
+                        'Galleria Immagini',
+                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
+                          color: AppData.charcoal,
                         ),
                       ),
                       const SizedBox(height: 10),
-                      _currentTrip.imageUrls.isNotEmpty
-                          ? SizedBox(
-                              height: 120,
-                              child: ListView.builder(
-                                scrollDirection: Axis.horizontal,
-                                itemCount: _currentTrip.imageUrls.length,
-                                itemBuilder: (ctx, index) {
-                                  final String rawImageUrl =
-                                      _currentTrip.imageUrls[index];
-                                  final String imageUrl = _sanitizeImagePath(
-                                    rawImageUrl,
-                                  );
-
-                                  Widget imageWidget;
-                                  if (imageUrl.startsWith('assets/')) {
-                                    imageWidget = Image.asset(
-                                      imageUrl,
-                                      width: 120,
-                                      height: 120,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (context, error, stackTrace) {
-                                        debugPrint(
-                                          'Errore caricamento asset galleria: $imageUrl, Errore: $error',
-                                        );
-                                        return _buildGalleryErrorPlaceholder();
-                                      },
-                                    );
-                                  } else if (imageUrl.startsWith('http://') ||
-                                      imageUrl.startsWith('https://')) {
-                                    imageWidget = CachedNetworkImage(
-                                      imageUrl: imageUrl,
-                                      width: 120,
-                                      height: 120,
-                                      fit: BoxFit.cover,
-                                      placeholder: (context, url) => Center(
-                                        child: CircularProgressIndicator(
-                                          valueColor: AlwaysStoppedAnimation<Color>(
-                                              AppData.antiFlashWhite),
+                      _currentTrip.imageUrls.isEmpty
+                          ? Center(
+                        child: Text(
+                          'Nessuna immagine aggiunta a questo viaggio.',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyLarge
+                              ?.copyWith(
+                            color: AppData.charcoal.withOpacity(0.7),
+                          ),
+                        ),
+                      )
+                          : GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          crossAxisSpacing: 8.0,
+                          mainAxisSpacing: 8.0,
+                        ),
+                        itemCount: _currentTrip.imageUrls.length,
+                        itemBuilder: (context, idx) {
+                          final imageUrl =
+                          _sanitizeImagePath(_currentTrip.imageUrls[idx]);
+                          return GestureDetector(
+                            onTap: () {
+                              showDialog(
+                                context: context,
+                                builder: (ctx) => Dialog(
+                                  backgroundColor: Colors.transparent,
+                                  child: Stack(
+                                    children: [
+                                      _buildGalleryImage(imageUrl),
+                                      Positioned(
+                                        top: 10,
+                                        right: 10,
+                                        child: IconButton(
+                                          icon: const Icon(Icons.close,
+                                              color: AppData
+                                                  .antiFlashWhite),
+                                          onPressed: () =>
+                                              Navigator.of(ctx).pop(),
                                         ),
                                       ),
-                                      errorWidget: (context, url, error) {
-                                        debugPrint(
-                                          'Errore caricamento network galleria: $url, Errore: $error',
-                                        );
-                                        return _buildGalleryErrorPlaceholder();
-                                      },
-                                    );
-                                  } else {
-                                    imageWidget = FutureBuilder<bool>(
-                                      future: File(imageUrl).exists(),
-                                      builder: (context, snapshot) {
-                                        if (snapshot.connectionState ==
-                                            ConnectionState.done) {
-                                          if (snapshot.hasError ||
-                                              !(snapshot.data ?? false)) {
-                                            debugPrint(
-                                              'Errore caricamento file locale galleria: $imageUrl, Errore: ${snapshot.error ?? "File non trovato"}',
-                                            );
-                                            return _buildGalleryErrorPlaceholder();
-                                          } else {
-                                            return Image.file(
-                                              File(imageUrl),
-                                              width: 120,
-                                              height: 120,
-                                              fit: BoxFit.cover,
-                                              errorBuilder:
-                                                  (context, error, stackTrace) {
-                                                    debugPrint(
-                                                      'Errore caricamento Image.file galleria: $imageUrl, Errore: $error',
-                                                    );
-                                                    return _buildGalleryErrorPlaceholder();
-                                                  },
-                                            );
-                                          }
-                                        }
-                                        return Center(
-                                          child: CircularProgressIndicator(
-                                            valueColor: AlwaysStoppedAnimation<Color>(
-                                                AppData.antiFlashWhite),
-                                          ),
-                                        );
-                                      },
-                                    );
-                                  }
-
-                                  return Padding(
-                                    padding: const EdgeInsets.only(right: 8.0),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(10),
-                                      child: imageWidget,
-                                    ),
-                                  );
-                                },
-                              ),
-                            )
-                          : Text(
-                              'Nessuna immagine specifica aggiunta per questo viaggio.',
-                              style: Theme.of(context).textTheme.bodyLarge
-                                  ?.copyWith(color: AppData.antiFlashWhite.withOpacity(0.7)), 
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8.0),
+                              child: _buildGalleryImage(imageUrl),
                             ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 80),
                     ],
+                  ),
+                );
+              },
+              childCount: 1,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(
+      BuildContext context, IconData icon, String label, String value,
+      {Color? iconColor}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: iconColor ?? AppData.silverLakeBlue),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppData.charcoal,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: AppData.charcoal.withOpacity(0.8),
                   ),
                 ),
               ],
             ),
           ),
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildCoverImageWidget(String imageUrl) {
+  Widget _buildCoverImage(String imageUrl) {
     if (imageUrl.startsWith('assets/')) {
       return Image.asset(
         imageUrl,
@@ -472,11 +333,8 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
       return CachedNetworkImage(
         imageUrl: imageUrl,
         fit: BoxFit.cover,
-        placeholder: (context, url) => Center(
-          child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(AppData.antiFlashWhite),
-          ),
-        ),
+        placeholder: (context, url) => const Center(
+            child: CircularProgressIndicator(color: AppData.silverLakeBlue)),
         errorWidget: (context, url, error) {
           debugPrint(
             'Errore caricamento network copertina: $url, Errore: $error',
@@ -507,7 +365,9 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
               );
             }
           }
-          return const Center(child: CircularProgressIndicator());
+          return const Center(
+              child:
+              CircularProgressIndicator(color: AppData.silverLakeBlue));
         },
       );
     }
@@ -515,16 +375,21 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
 
   Widget _buildErrorPlaceholder() {
     return Container(
-      color: Colors.grey[800], 
-      child: const Center(
+      color: AppData.charcoal.withOpacity(0.8),
+      child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.image_not_supported, color: AppData.antiFlashWhite.withOpacity(0.7), size: 60),
+            Icon(
+              Icons.image_not_supported,
+              color: AppData.antiFlashWhite.withOpacity(0.7),
+              size: 60,
+            ),
             const SizedBox(height: 8),
             Text(
               'Immagine non trovata',
-              style: TextStyle(color: AppData.antiFlashWhite.withOpacity(0.7), fontSize: 16),
+              style: TextStyle(
+                  color: AppData.antiFlashWhite.withOpacity(0.7), fontSize: 16),
               textAlign: TextAlign.center,
             ),
           ],
@@ -533,12 +398,81 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
     );
   }
 
+  Widget _buildGalleryImage(String imageUrl) {
+    if (imageUrl.startsWith('assets/')) {
+      return Image.asset(
+        imageUrl,
+        fit: BoxFit.cover,
+        width: 120,
+        height: 120,
+        errorBuilder: (context, error, stackTrace) {
+          debugPrint(
+            'Errore caricamento asset galleria: $imageUrl, Errore: $error',
+          );
+          return _buildGalleryErrorPlaceholder();
+        },
+      );
+    } else if (imageUrl.startsWith('http://') ||
+        imageUrl.startsWith('https://')) {
+      return CachedNetworkImage(
+        imageUrl: imageUrl,
+        fit: BoxFit.cover,
+        width: 120,
+        height: 120,
+        placeholder: (context, url) => const Center(
+            child: CircularProgressIndicator(color: AppData.silverLakeBlue)),
+        errorWidget: (context, url, error) {
+          debugPrint(
+            'Errore caricamento network galleria: $url, Errore: $error',
+          );
+          return _buildGalleryErrorPlaceholder();
+        },
+      );
+    } else {
+      return FutureBuilder<bool>(
+        future: File(imageUrl).exists(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            if (snapshot.hasError || !(snapshot.data ?? false)) {
+              debugPrint(
+                'Errore caricamento file locale galleria: $imageUrl, Errore: ${snapshot.error ?? "File non trovato"}',
+              );
+              return _buildGalleryErrorPlaceholder();
+            } else {
+              return Image.file(
+                File(imageUrl),
+                fit: BoxFit.cover,
+                width: 120,
+                height: 120,
+                errorBuilder: (context, error, stackTrace) {
+                  debugPrint(
+                    'Errore caricamento Image.file galleria: $imageUrl, Errore: $error',
+                  );
+                  return _buildGalleryErrorPlaceholder();
+                },
+              );
+            }
+          }
+          return const Center(
+              child:
+              CircularProgressIndicator(color: AppData.silverLakeBlue));
+        },
+      );
+    }
+  }
+
   Widget _buildGalleryErrorPlaceholder() {
     return Container(
       width: 120,
       height: 120,
-      color: AppData.charcoal.withOpacity(0.8),
-      child: Icon(Icons.broken_image, color: AppData.antiFlashWhite.withOpacity(0.7), size: 50),
+      color: AppData.charcoal.withOpacity(0.6),
+      child: Center(
+        child: Icon(
+          Icons.image_not_supported,
+          color: AppData.antiFlashWhite.withOpacity(0.7),
+          size: 40,
+        ),
+      ),
     );
   }
 }

@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import '../helpers/trip_database_helper.dart';
 import 'package:travel_diary_app/screens/search_screen.dart';
-import '../utils/app_data.dart'; 
+import '../utils/app_data.dart';
 
 class CategoriesScreen extends StatefulWidget {
   const CategoriesScreen({super.key});
@@ -48,14 +48,14 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         title: const Text(
           'Categorie Viaggi',
           style: TextStyle(
-            color: _textColorOnGradient, 
+            color: AppData.antiFlashWhite,
             fontWeight: FontWeight.bold,
           ),
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            color: _textColorOnGradient, 
+            color: AppData.antiFlashWhite,
             onPressed: () {
               setState(() {
                 _loadCategoriesFuture = _loadCategoryCounts();
@@ -70,7 +70,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
         height: double.infinity,
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [_gradientStartColor, _gradientEndColor],
+            colors: [AppData.silverLakeBlue.withOpacity(0.7), AppData.charcoal.withOpacity(0.9)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -83,7 +83,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                 return const Center(
                   child: CircularProgressIndicator(
                     valueColor:
-                    AlwaysStoppedAnimation<Color>(_textColorOnGradient),
+                    AlwaysStoppedAnimation<Color>(AppData.antiFlashWhite),
                   ),
                 );
               }
@@ -93,7 +93,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   child: Text(
                     'Errore nel caricamento delle categorie: ${snapshot.error}',
                     style: const TextStyle(
-                        color: _textColorOnGradient), 
+                        color: AppData.antiFlashWhite),
                   ),
                 );
               }
@@ -108,7 +108,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                       style: Theme.of(context).textTheme.headlineSmall
                           ?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: _textColorOnGradient, 
+                        color: AppData.antiFlashWhite,
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -121,7 +121,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                           textAlign: TextAlign.center,
                           style: TextStyle(
                               color:
-                              _textColorOnGradient), 
+                              AppData.antiFlashWhite),
                         ),
                       ),
                     )
@@ -135,30 +135,30 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                           );
                           final count = _categoryCounts[category];
                           return Card(
-                            color: _cardBackgroundColor,
+                            color: AppData.antiFlashWhite.withOpacity(0.15),
                             margin: const EdgeInsets.symmetric(
                                 vertical: 8.0),
                             elevation: 4,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12), 
+                              borderRadius: BorderRadius.circular(12),
                               side: BorderSide(
-                                  color: Colors.blue.shade200, 
+                                  color: AppData.silverLakeBlue.withOpacity(0.5),
                                   width: 1),
                             ),
                             child: ListTile(
                               leading: const Icon(Icons.folder_open,
-                                  color: _iconColor), 
+                                  color: AppData.silverLakeBlue),
                               title: Text(
                                 category,
                                 style: const TextStyle(
-                                  color: _textColorOnCard, 
+                                  color: AppData.antiFlashWhite,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                               trailing: Text(
                                 '$count viaggi',
                                 style: TextStyle(
-                                  color: _iconColor, 
+                                  color: AppData.silverLakeBlue,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
