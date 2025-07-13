@@ -13,7 +13,6 @@ class CategoriesScreen extends StatefulWidget {
 }
 
 class _CategoriesScreenState extends State<CategoriesScreen> {
-
   Map<String, int> _categoryCounts = {};
   late Future<void> _loadCategoriesFuture;
 
@@ -39,23 +38,25 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      backgroundColor: Colors.transparent,
+      // Scaffold background color set to antiFlashWhite
+      backgroundColor: AppData.antiFlashWhite,
 
+      // extendBodyBehindAppBar: true, // Rimosso perché l'AppBar non è più trasparente
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        // AppBar background color set to silverLakeBlue
+        backgroundColor: AppData.silverLakeBlue,
         elevation: 0,
         title: const Text(
           'Categorie Viaggi',
           style: TextStyle(
-            color: AppData.antiFlashWhite,
+            color: AppData.antiFlashWhite, // AppBar title text color
             fontWeight: FontWeight.bold,
           ),
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            color: AppData.antiFlashWhite,
+            color: AppData.antiFlashWhite, // Refresh icon color
             onPressed: () {
               setState(() {
                 _loadCategoriesFuture = _loadCategoryCounts();
@@ -68,13 +69,9 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [AppData.silverLakeBlue.withOpacity(0.7), AppData.charcoal.withOpacity(0.9)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
+        // Rimosso il BoxDecoration con il gradiente per mostrare lo sfondo silver del Scaffold
+        color: AppData
+            .antiFlashWhite, // Imposta il colore del Container a antiFlashWhite
         child: SafeArea(
           child: FutureBuilder<void>(
             future: _loadCategoriesFuture,
@@ -82,8 +79,9 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(
                   child: CircularProgressIndicator(
-                    valueColor:
-                    AlwaysStoppedAnimation<Color>(AppData.antiFlashWhite),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      AppData.silverLakeBlue,
+                    ), // Loading indicator color (cambiato per contrasto)
                   ),
                 );
               }
@@ -93,7 +91,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   child: Text(
                     'Errore nel caricamento delle categorie: ${snapshot.error}',
                     style: const TextStyle(
-                        color: AppData.antiFlashWhite),
+                      color: AppData.charcoal,
+                    ), // Error text color (cambiato per contrasto)
                   ),
                 );
               }
@@ -105,78 +104,88 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   children: [
                     Text(
                       'Riepilogo per categoria:',
-                      style: Theme.of(context).textTheme.headlineSmall
-                          ?.copyWith(
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.bold,
-                        color: AppData.antiFlashWhite,
+                        color: AppData
+                            .charcoal, // Section title text color (cambiato per contrasto)
                       ),
                     ),
                     const SizedBox(height: 10),
                     _categoryCounts.isEmpty
-                        ? const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(20.0),
-                        child: Text(
-                          'Nessuna categoria trovata. Aggiungi dei viaggi per vederle qui.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              color:
-                              AppData.antiFlashWhite),
-                        ),
-                      ),
-                    )
-                        : Expanded(
-                      child: ListView.builder(
-                        itemCount: _categoryCounts.length,
-                        itemBuilder: (context, index) {
-                          final category =
-                          _categoryCounts.keys.elementAt(
-                            index,
-                          );
-                          final count = _categoryCounts[category];
-                          return Card(
-                            color: AppData.antiFlashWhite.withOpacity(0.15),
-                            margin: const EdgeInsets.symmetric(
-                                vertical: 8.0),
-                            elevation: 4,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              side: BorderSide(
-                                  color: AppData.silverLakeBlue.withOpacity(0.5),
-                                  width: 1),
-                            ),
-                            child: ListTile(
-                              leading: const Icon(Icons.folder_open,
-                                  color: AppData.silverLakeBlue),
-                              title: Text(
-                                category,
-                                style: const TextStyle(
-                                  color: AppData.antiFlashWhite,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              trailing: Text(
-                                '$count viaggi',
+                        ? Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(20.0),
+                              child: Text(
+                                'Nessuna categoria trovata. Aggiungi dei viaggi per vederle qui.',
+                                textAlign: TextAlign.center,
                                 style: TextStyle(
-                                  color: AppData.silverLakeBlue,
-                                  fontWeight: FontWeight.w600,
+                                  color: AppData.charcoal.withOpacity(
+                                    0.7,
+                                  ), // No data text color (cambiato per contrasto)
                                 ),
                               ),
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => SearchScreen(
-                                      initialCategory: category,
+                            ),
+                          )
+                        : Expanded(
+                            child: ListView.builder(
+                              itemCount: _categoryCounts.length,
+                              itemBuilder: (context, index) {
+                                final category = _categoryCounts.keys.elementAt(
+                                  index,
+                                );
+                                final count = _categoryCounts[category];
+                                return Card(
+                                  // Card background color set to antiFlashWhite
+                                  color: AppData.antiFlashWhite,
+                                  margin: const EdgeInsets.symmetric(
+                                    vertical: 8.0,
+                                  ),
+                                  elevation: 4,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    side: BorderSide(
+                                      color: AppData.silverLakeBlue.withOpacity(
+                                        0.5,
+                                      ), // Card border color
+                                      width: 1,
                                     ),
+                                  ),
+                                  child: ListTile(
+                                    leading: const Icon(
+                                      Icons.folder_open,
+                                      color: AppData.silverLakeBlue,
+                                    ), // Leading icon color
+                                    title: Text(
+                                      category,
+                                      style: const TextStyle(
+                                        color: AppData
+                                            .charcoal, // Title text color on card
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    trailing: Text(
+                                      '$count viaggi',
+                                      style: TextStyle(
+                                        color: AppData
+                                            .silverLakeBlue, // Trailing text color
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => SearchScreen(
+                                            initialCategory: category,
+                                          ),
+                                        ),
+                                      );
+                                    },
                                   ),
                                 );
                               },
                             ),
-                          );
-                        },
-                      ),
-                    ),
+                          ),
                     const SizedBox(height: 20),
                   ],
                 ),

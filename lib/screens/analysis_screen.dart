@@ -18,35 +18,31 @@ class AnalysisScreen extends StatelessWidget {
         title: const Text(
           'Analisi Viaggi',
           style: TextStyle(
-              color: AppData.antiFlashWhite), // AppBar title text color
+            color: AppData.antiFlashWhite,
+          ), // AppBar title text color (mantenuto bianco per contrasto con silverLakeBlue)
         ),
-        backgroundColor: Colors.transparent, // AppBar background transparent
+        backgroundColor:
+            AppData.silverLakeBlue, // Sfondo dell'AppBar come richiesto
         elevation: 0,
         iconTheme: const IconThemeData(
-            color: AppData.antiFlashWhite), // AppBar icon color
+          color: AppData.antiFlashWhite,
+        ), // AppBar icon color (mantenuto bianco)
       ),
-      extendBodyBehindAppBar: true,
+      // extendBodyBehindAppBar: true, // Rimosso perché l'AppBar non è più trasparente
       body: Container(
-        width:
-        double.infinity,
+        width: double.infinity,
         height: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              AppData.silverLakeBlue.withOpacity(0.7), // Gradient start color
-              AppData.charcoal.withOpacity(0.9) // Gradient end color
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
+        // Rimosso il BoxDecoration con il gradiente per mostrare lo sfondo silver del Scaffold
+        color: AppData
+            .antiFlashWhite, // Imposta il colore del Container a antiFlashWhite
         child: FutureBuilder<List<Trip>>(
           future: TripDatabaseHelper.instance.getAllTrips(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(
                 child: CircularProgressIndicator(
-                    color: AppData.antiFlashWhite), // Loading indicator color
+                  color: AppData.silverLakeBlue,
+                ), // Loading indicator color (cambiato per contrasto)
               );
             }
             if (snapshot.hasError) {
@@ -54,7 +50,8 @@ class AnalysisScreen extends StatelessWidget {
                 child: Text(
                   'Errore nel caricamento dei dati: ${snapshot.error}',
                   style: const TextStyle(
-                      color: AppData.antiFlashWhite), // Error text color
+                    color: AppData.charcoal,
+                  ), // Error text color (cambiato per contrasto)
                 ),
               );
             }
@@ -63,7 +60,8 @@ class AnalysisScreen extends StatelessWidget {
                 child: Text(
                   'Nessun viaggio trovato per l\'analisi.',
                   style: TextStyle(
-                      color: AppData.antiFlashWhite), // No data text color
+                    color: AppData.charcoal,
+                  ), // No data text color (cambiato per contrasto)
                 ),
               );
             }
@@ -75,7 +73,7 @@ class AnalysisScreen extends StatelessWidget {
             for (var trip in trips) {
               tripsByCategory.update(
                 trip.category,
-                    (value) => value + 1,
+                (value) => value + 1,
                 ifAbsent: () => 1,
               );
             }
@@ -91,7 +89,7 @@ class AnalysisScreen extends StatelessWidget {
               final totalYears = tripsByYear.keys.length;
               final sumTrips = tripsByYear.values.fold(
                 0,
-                    (sum, count) => sum + count,
+                (sum, count) => sum + count,
               );
               averageTripsPerYear = sumTrips / totalYears;
             }
@@ -115,7 +113,7 @@ class AnalysisScreen extends StatelessWidget {
               if (trip.location != null && trip.location.isNotEmpty) {
                 tripsByCountry.update(
                   trip.location,
-                      (value) => value + 1,
+                  (value) => value + 1,
                   ifAbsent: () => 1,
                 );
               }
@@ -147,13 +145,15 @@ class AnalysisScreen extends StatelessWidget {
                   titleStyle: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    color: AppData.antiFlashWhite, // Pie chart section title text color
+                    color: AppData
+                        .antiFlashWhite, // Pie chart section title text color (mantenuto bianco per contrasto con colori categoria)
                   ),
                   badgeWidget: Text(
                     '${count}',
                     style: const TextStyle(
-                        color: AppData.antiFlashWhite,
-                        fontSize: 10), // Pie chart section badge text color
+                      color: AppData.antiFlashWhite,
+                      fontSize: 10,
+                    ), // Pie chart section badge text color (mantenuto bianco)
                   ),
                   badgePositionPercentageOffset: .98,
                 ),
@@ -182,9 +182,7 @@ class AnalysisScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ],
-                  showingTooltipIndicators: [
-                    0,
-                  ],
+                  showingTooltipIndicators: [0],
                 ),
               );
             }
@@ -198,9 +196,9 @@ class AnalysisScreen extends StatelessWidget {
                   children: [
                     Text(
                       'Statistiche dei Viaggi',
-                      style: Theme.of(context).textTheme.headlineLarge
-                          ?.copyWith(
-                        color: AppData.antiFlashWhite, // Section title text color
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        color: AppData
+                            .charcoal, // Section title text color (cambiato per contrasto)
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -230,7 +228,8 @@ class AnalysisScreen extends StatelessWidget {
                     Text(
                       'Viaggi per Categoria:',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: AppData.antiFlashWhite, // Category chart title color
+                        color: AppData
+                            .charcoal, // Category chart title color (cambiato per contrasto)
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -238,8 +237,9 @@ class AnalysisScreen extends StatelessWidget {
                     AspectRatio(
                       aspectRatio: 1.3,
                       child: Card(
-                        color: AppData.antiFlashWhite
-                            .withOpacity(0.15), // Chart card background color
+                        color: AppData.antiFlashWhite.withOpacity(
+                          0.8,
+                        ), // Chart card background color (cambiato per essere più visibile su sfondo silver)
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(15.0),
                         ),
@@ -250,15 +250,11 @@ class AnalysisScreen extends StatelessWidget {
                             PieChartData(
                               sections: pieChartSections,
                               sectionsSpace: 2,
-                              centerSpaceRadius:
-                              40,
-                              borderData: FlBorderData(
-                                show: false,
-                              ),
+                              centerSpaceRadius: 40,
+                              borderData: FlBorderData(show: false),
                               pieTouchData: PieTouchData(
                                 touchCallback:
-                                    (FlTouchEvent event, pieTouchResponse) {
-                                },
+                                    (FlTouchEvent event, pieTouchResponse) {},
                               ),
                             ),
                           ),
@@ -268,7 +264,7 @@ class AnalysisScreen extends StatelessWidget {
                     const SizedBox(height: 24),
 
                     ...tripsByCategory.entries.map(
-                          (entry) => _buildStatCard(
+                      (entry) => _buildStatCard(
                         context,
                         entry.key,
                         '${entry.value} viaggi',
@@ -279,7 +275,8 @@ class AnalysisScreen extends StatelessWidget {
                     Text(
                       'Viaggi per Anno:',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: AppData.antiFlashWhite, // Year chart title color
+                        color: AppData
+                            .charcoal, // Year chart title color (cambiato per contrasto)
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -288,8 +285,9 @@ class AnalysisScreen extends StatelessWidget {
                     AspectRatio(
                       aspectRatio: 1.6,
                       child: Card(
-                        color: AppData.antiFlashWhite
-                            .withOpacity(0.15), // Chart card background color
+                        color: AppData.antiFlashWhite.withOpacity(
+                          0.8,
+                        ), // Chart card background color (cambiato per essere più visibile su sfondo silver)
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(15.0),
                         ),
@@ -304,18 +302,19 @@ class AnalysisScreen extends StatelessWidget {
                               gridData: FlGridData(
                                 show: true,
                                 drawVerticalLine: false,
-                                getDrawingHorizontalLine: (value) =>
-                                    FlLine(
-                                      color: AppData.antiFlashWhite
-                                          .withOpacity(0.1), // Grid line color
-                                      strokeWidth: 1,
-                                    ),
+                                getDrawingHorizontalLine: (value) => FlLine(
+                                  color: AppData.charcoal.withOpacity(
+                                    0.1,
+                                  ), // Grid line color (cambiato per contrasto)
+                                  strokeWidth: 1,
+                                ),
                               ),
                               borderData: FlBorderData(
                                 show: true,
                                 border: Border.all(
-                                  color: AppData.antiFlashWhite
-                                      .withOpacity(0.3), // Chart border color
+                                  color: AppData.charcoal.withOpacity(
+                                    0.3,
+                                  ), // Chart border color (cambiato per contrasto)
                                   width: 1,
                                 ),
                               ),
@@ -329,7 +328,8 @@ class AnalysisScreen extends StatelessWidget {
                                         return Text(
                                           '${sortedYears[value.toInt()]}',
                                           style: const TextStyle(
-                                            color: AppData.antiFlashWhite, // X-axis label color
+                                            color: AppData
+                                                .charcoal, // X-axis label color (cambiato per contrasto)
                                             fontSize: 10,
                                           ),
                                         );
@@ -344,11 +344,10 @@ class AnalysisScreen extends StatelessWidget {
                                     showTitles: true,
                                     getTitlesWidget: (value, meta) {
                                       return Text(
-                                        value
-                                            .toInt()
-                                            .toString(),
+                                        value.toInt().toString(),
                                         style: const TextStyle(
-                                          color: AppData.antiFlashWhite, // Y-axis label color
+                                          color: AppData
+                                              .charcoal, // Y-axis label color (cambiato per contrasto)
                                           fontSize: 10,
                                         ),
                                       );
@@ -365,19 +364,20 @@ class AnalysisScreen extends StatelessWidget {
                               ),
                               barTouchData: BarTouchData(
                                 touchTooltipData: BarTouchTooltipData(
-                                  getTooltipItem:
-                                      (group, groupIndex, rod, rodIndex) {
+                                  getTooltipItem: (group, groupIndex, rod, rodIndex) {
                                     return BarTooltipItem(
                                       'Anno: ${sortedYears[group.x]}\n',
                                       const TextStyle(
-                                        color: AppData.antiFlashWhite, // Tooltip text color
+                                        color: AppData
+                                            .antiFlashWhite, // Tooltip text color (mantenuto bianco su sfondo scuro del tooltip)
                                         fontWeight: FontWeight.bold,
                                       ),
                                       children: <TextSpan>[
                                         TextSpan(
                                           text: '${rod.toY.toInt()} viaggi',
                                           style: const TextStyle(
-                                            color: AppData.antiFlashWhite, // Tooltip text color
+                                            color: AppData
+                                                .antiFlashWhite, // Tooltip text color (mantenuto bianco)
                                             fontSize: 12,
                                             fontWeight: FontWeight.w500,
                                           ),
@@ -394,7 +394,7 @@ class AnalysisScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 24),
                     ...tripsByYear.entries.map(
-                          (entry) => _buildStatCard(
+                      (entry) => _buildStatCard(
                         context,
                         '${entry.key}',
                         '${entry.value} viaggi',
@@ -416,11 +416,13 @@ class AnalysisScreen extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 4.0),
       padding: const EdgeInsets.all(12.0),
       decoration: BoxDecoration(
-        color: AppData.silverLakeBlue.withOpacity(0.4), // Stat card background color
+        color: AppData.antiFlashWhite.withOpacity(
+          0.8,
+        ), // Stat card background color (cambiato per essere visibile su sfondo silver)
         borderRadius: BorderRadius.circular(8.0),
         border: Border.all(
-            color: AppData.antiFlashWhite
-                .withOpacity(0.3)), // Stat card border color
+          color: AppData.charcoal.withOpacity(0.3),
+        ), // Stat card border color (cambiato per contrasto)
       ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -431,7 +433,8 @@ class AnalysisScreen extends StatelessWidget {
               child: Text(
                 label,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: AppData.antiFlashWhite, // Stat card label text color
+                  color: AppData
+                      .charcoal, // Stat card label text color (cambiato per contrasto)
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -439,7 +442,8 @@ class AnalysisScreen extends StatelessWidget {
             Text(
               value,
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: AppData.antiFlashWhite, // Stat card value text color
+                color: AppData
+                    .charcoal, // Stat card value text color (cambiato per contrasto)
                 fontWeight: FontWeight.bold,
               ),
             ),

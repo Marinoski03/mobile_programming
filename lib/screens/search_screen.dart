@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:travel_diary_app/screens/trip_detail_screen.dart';
+import 'dart:io'; // Import per File
+import 'package:cached_network_image/cached_network_image.dart'; // Import per CachedNetworkImage
 
 import '../models/trip.dart';
 import '../helpers/trip_database_helper.dart';
@@ -93,14 +95,16 @@ class _SearchScreenState extends State<SearchScreen> {
 
         final matchesCategory =
             _selectedCategoryFilter == 'Tutte' ||
-                trip.category.trim().toLowerCase() ==
-                    _selectedCategoryFilter.trim().toLowerCase();
+            trip.category.trim().toLowerCase() ==
+                _selectedCategoryFilter.trim().toLowerCase();
 
-        final matchesStartDate = _startDateFilter == null ||
+        final matchesStartDate =
+            _startDateFilter == null ||
             (trip.startDate.isAtSameMomentAs(_startDateFilter!) ||
                 trip.startDate.isAfter(_startDateFilter!));
 
-        final matchesEndDate = _endDateFilter == null ||
+        final matchesEndDate =
+            _endDateFilter == null ||
             (trip.endDate.isAtSameMomentAs(_endDateFilter!) ||
                 trip.endDate.isBefore(_endDateFilter!));
 
@@ -129,8 +133,7 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(
-                foregroundColor:
-                AppData.silverLakeBlue,
+                foregroundColor: AppData.silverLakeBlue,
               ),
             ),
           ),
@@ -160,6 +163,113 @@ class _SearchScreenState extends State<SearchScreen> {
     });
   }
 
+  // Widget per visualizzare l'immagine o un placeholder vuoto
+  Widget _buildImageWidget(
+    String? imageUrl, {
+    double? width,
+    double? height,
+    BoxFit? fit,
+    BorderRadius? borderRadius,
+  }) {
+    if (imageUrl == null || imageUrl.isEmpty) {
+      return Container(
+        width: width,
+        height: height,
+        decoration: BoxDecoration(
+          color: AppData.antiFlashWhite.withOpacity(
+            0.5,
+          ), // Sfondo molto chiaro per lo spazio vuoto
+          borderRadius: borderRadius ?? BorderRadius.zero,
+          border: Border.all(
+            color: AppData.charcoal.withOpacity(0.1),
+          ), // Bordo sottile
+        ),
+      );
+    }
+
+    Widget imageWidget;
+    if (imageUrl.startsWith('assets/')) {
+      imageWidget = Image.asset(
+        imageUrl,
+        width: width,
+        height: height,
+        fit: fit ?? BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          debugPrint('Errore caricamento asset: $imageUrl, Errore: $error');
+          return _buildErrorPlaceholder(width: width, height: height);
+        },
+      );
+    } else if (imageUrl.startsWith('http://') ||
+        imageUrl.startsWith('https://')) {
+      imageWidget = CachedNetworkImage(
+        imageUrl: imageUrl,
+        width: width,
+        height: height,
+        fit: fit ?? BoxFit.cover,
+        placeholder: (context, url) => const Center(
+          child: CircularProgressIndicator(color: AppData.silverLakeBlue),
+        ),
+        errorWidget: (context, url, error) {
+          debugPrint('Errore caricamento network: $url, Errore: $error');
+          return _buildErrorPlaceholder(width: width, height: height);
+        },
+      );
+    } else {
+      imageWidget = FutureBuilder<bool>(
+        future: File(imageUrl).exists(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            if (snapshot.hasError || !(snapshot.data ?? false)) {
+              debugPrint(
+                'Errore caricamento file locale: $imageUrl, Errore: ${snapshot.error ?? "File non trovato"}',
+              );
+              return _buildErrorPlaceholder(width: width, height: height);
+            } else {
+              return Image.file(
+                File(imageUrl),
+                width: width,
+                height: height,
+                fit: fit ?? BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  debugPrint(
+                    'Errore caricamento Image.file: $imageUrl, Errore: $error',
+                  );
+                  return _buildErrorPlaceholder(width: width, height: height);
+                },
+              );
+            }
+          }
+          return const Center(
+            child: CircularProgressIndicator(color: AppData.silverLakeBlue),
+          );
+        },
+      );
+    }
+
+    if (borderRadius != null) {
+      return ClipRRect(borderRadius: borderRadius, child: imageWidget);
+    }
+    return imageWidget;
+  }
+
+  // Widget per il placeholder in caso di errore di caricamento immagine
+  Widget _buildErrorPlaceholder({double? width, double? height}) {
+    return Container(
+      width: width,
+      height: height,
+      color: AppData.antiFlashWhite.withOpacity(0.3),
+      child: Icon(
+        Icons.image_not_supported,
+        color: AppData.charcoal.withOpacity(0.6),
+        size: (width ?? 50) / 2,
+      ),
+    );
+  }
+
+  String _sanitizeImagePath(String path) {
+    return path.replaceAll('["', '').replaceAll('"]', '').replaceAll('"', '');
+  }
+
   @override
   Widget build(BuildContext context) {
     final InputDecorationTheme inputDecorationTheme = InputDecorationTheme(
@@ -167,9 +277,7 @@ class _SearchScreenState extends State<SearchScreen> {
       hintStyle: TextStyle(color: AppData.charcoal.withOpacity(0.7)),
       prefixIconColor: AppData.silverLakeBlue,
       suffixIconColor: AppData.silverLakeBlue,
-      floatingLabelStyle: const TextStyle(
-        color: AppData.silverLakeBlue,
-      ),
+      floatingLabelStyle: const TextStyle(color: AppData.silverLakeBlue),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(
@@ -179,10 +287,7 @@ class _SearchScreenState extends State<SearchScreen> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(
-          color: AppData.silverLakeBlue,
-          width: 2.0,
-        ),
+        borderSide: const BorderSide(color: AppData.silverLakeBlue, width: 2.0),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -193,9 +298,7 @@ class _SearchScreenState extends State<SearchScreen> {
         borderSide: const BorderSide(color: AppData.cerise, width: 2.0),
       ),
       filled: true,
-      fillColor: AppData.antiFlashWhite.withOpacity(
-        0.9,
-      ),
+      fillColor: AppData.antiFlashWhite.withOpacity(0.9),
       contentPadding: const EdgeInsets.symmetric(
         vertical: 14.0,
         horizontal: 16.0,
@@ -203,36 +306,28 @@ class _SearchScreenState extends State<SearchScreen> {
     );
 
     return Scaffold(
+      backgroundColor: AppData.antiFlashWhite, // Sfondo della home page
       extendBodyBehindAppBar: true,
-      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppData.silverLakeBlue, // Colore di sfondo dell'AppBar
         elevation: 0,
         title: const Text(
           'Cerca Viaggi',
           style: TextStyle(
-            color: AppData.antiFlashWhite,
+            color: AppData.antiFlashWhite, // Colore della scritta del titolo
             fontWeight: FontWeight.bold,
           ),
         ),
         iconTheme: const IconThemeData(
-          color: AppData.antiFlashWhite,
+          color: AppData.antiFlashWhite, // Colore delle icone nell'AppBar
         ),
       ),
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: BoxDecoration(
-          // Gradiente con colori AppData
-          gradient: LinearGradient(
-            colors: [
-              AppData.silverLakeBlue.withOpacity(0.7),
-              AppData.charcoal.withOpacity(0.9)
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
+        // Rimosso il BoxDecoration con il gradiente per mostrare lo sfondo silver del Scaffold
+        color: AppData
+            .antiFlashWhite, // Imposta il colore del Container a antiFlashWhite
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
@@ -254,8 +349,10 @@ class _SearchScreenState extends State<SearchScreen> {
                         color: AppData.silverLakeBlue,
                       ),
                       suffixIcon: IconButton(
-                        icon:
-                        const Icon(Icons.clear, color: AppData.silverLakeBlue),
+                        icon: const Icon(
+                          Icons.clear,
+                          color: AppData.silverLakeBlue,
+                        ),
                         onPressed: () {
                           _searchController.clear();
                           _performSearch();
@@ -271,49 +368,48 @@ class _SearchScreenState extends State<SearchScreen> {
                     Expanded(
                       child: _isLoadingCategories
                           ? Center(
-                        child: CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            AppData.antiFlashWhite,
-                          ),
-                        ),
-                      )
-                          : Theme(
-                        data: Theme.of(context).copyWith(
-                          inputDecorationTheme: inputDecorationTheme,
-                        ),
-                        child: DropdownButtonFormField<String>(
-                          value: _selectedCategoryFilter,
-                          style: const TextStyle(
-                            color: AppData.charcoal,
-                          ),
-                          icon: const Icon(
-                            Icons.arrow_drop_down,
-                            color: AppData.silverLakeBlue,
-                          ),
-                          decoration: const InputDecoration(
-                            labelText: 'Filtra per Categoria',
-                          ),
-                          dropdownColor:
-                          AppData.antiFlashWhite,
-                          items: _categories.map((String category) {
-                            return DropdownMenuItem<String>(
-                              value: category.trim(),
-                              child: Text(
-                                category,
-                                style: const TextStyle(
-                                  color: AppData.charcoal,
+                              child: CircularProgressIndicator(
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  AppData.silverLakeBlue,
                                 ),
                               ),
-                            );
-                          }).toList(),
-                          onChanged: (String? newValue) {
-                            setState(() {
-                              _selectedCategoryFilter = newValue!.trim();
-                              _performSearch();
-                            });
-                          },
-                        ),
-                      ),
+                            )
+                          : Theme(
+                              data: Theme.of(context).copyWith(
+                                inputDecorationTheme: inputDecorationTheme,
+                              ),
+                              child: DropdownButtonFormField<String>(
+                                value: _selectedCategoryFilter,
+                                style: const TextStyle(color: AppData.charcoal),
+                                icon: const Icon(
+                                  Icons.arrow_drop_down,
+                                  color: AppData.silverLakeBlue,
+                                ),
+                                decoration: const InputDecoration(
+                                  labelText: 'Filtra per Categoria',
+                                ),
+                                dropdownColor: AppData
+                                    .antiFlashWhite, // Sfondo del dropdown
+                                items: _categories.map((String category) {
+                                  return DropdownMenuItem<String>(
+                                    value: category.trim(),
+                                    child: Text(
+                                      category,
+                                      style: const TextStyle(
+                                        color: AppData
+                                            .charcoal, // Colore testo nel dropdown
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                                onChanged: (String? newValue) {
+                                  setState(() {
+                                    _selectedCategoryFilter = newValue!.trim();
+                                    _performSearch();
+                                  });
+                                },
+                              ),
+                            ),
                     ),
                   ],
                 ),
@@ -337,28 +433,26 @@ class _SearchScreenState extends State<SearchScreen> {
                                 ),
                                 suffixIcon: _startDateFilter != null
                                     ? IconButton(
-                                  icon: const Icon(
-                                    Icons.clear,
-                                    color: AppData.silverLakeBlue,
-                                  ),
-                                  onPressed: () {
-                                    setState(() {
-                                      _startDateFilter = null;
-                                      _performSearch();
-                                    });
-                                  },
-                                )
+                                        icon: const Icon(
+                                          Icons.clear,
+                                          color: AppData.silverLakeBlue,
+                                        ),
+                                        onPressed: () {
+                                          setState(() {
+                                            _startDateFilter = null;
+                                            _performSearch();
+                                          });
+                                        },
+                                      )
                                     : null,
                               ),
                               child: Text(
                                 _startDateFilter == null
                                     ? 'Seleziona data'
                                     : DateFormat(
-                                  'dd/MM/yyyy',
-                                ).format(_startDateFilter!),
-                                style: const TextStyle(
-                                  color: AppData.charcoal,
-                                ),
+                                        'dd/MM/yyyy',
+                                      ).format(_startDateFilter!),
+                                style: const TextStyle(color: AppData.charcoal),
                               ),
                             ),
                           ),
@@ -383,28 +477,26 @@ class _SearchScreenState extends State<SearchScreen> {
                                 ),
                                 suffixIcon: _endDateFilter != null
                                     ? IconButton(
-                                  icon: const Icon(
-                                    Icons.clear,
-                                    color: AppData.silverLakeBlue,
-                                  ),
-                                  onPressed: () {
-                                    setState(() {
-                                      _endDateFilter = null;
-                                      _performSearch();
-                                    });
-                                  },
-                                )
+                                        icon: const Icon(
+                                          Icons.clear,
+                                          color: AppData.silverLakeBlue,
+                                        ),
+                                        onPressed: () {
+                                          setState(() {
+                                            _endDateFilter = null;
+                                            _performSearch();
+                                          });
+                                        },
+                                      )
                                     : null,
                               ),
                               child: Text(
                                 _endDateFilter == null
                                     ? 'Seleziona data'
                                     : DateFormat(
-                                  'dd/MM/yyyy',
-                                ).format(_endDateFilter!),
-                                style: const TextStyle(
-                                  color: AppData.charcoal,
-                                ),
+                                        'dd/MM/yyyy',
+                                      ).format(_endDateFilter!),
+                                style: const TextStyle(color: AppData.charcoal),
                               ),
                             ),
                           ),
@@ -420,14 +512,17 @@ class _SearchScreenState extends State<SearchScreen> {
                     onPressed: _clearFilters,
                     icon: const Icon(
                       Icons.filter_alt_off,
-                      color: AppData.antiFlashWhite,
-                    ), // Icona bianca
+                      color: AppData.antiFlashWhite, // Icona bianca
+                    ),
                     label: const Text(
                       'Cancella Filtri',
-                      style: TextStyle(color: AppData.antiFlashWhite),
+                      style: TextStyle(
+                        color: AppData.antiFlashWhite,
+                      ), // Testo bianco
                     ),
                     style: TextButton.styleFrom(
-                      foregroundColor: AppData.antiFlashWhite,
+                      foregroundColor: AppData
+                          .antiFlashWhite, // Colore del testo del bottone
                     ),
                   ),
                 ),
@@ -435,112 +530,131 @@ class _SearchScreenState extends State<SearchScreen> {
                 Expanded(
                   child: _searchResults.isEmpty
                       ? Center(
-                    child: Text(
-                      'Nessun risultato trovato per i filtri selezionati.',
-                      style: TextStyle(
-                        color: AppData.antiFlashWhite.withOpacity(0.7),
-                      ),
-                    ),
-                  )
+                          child: Text(
+                            'Nessun risultato trovato per i filtri selezionati.',
+                            style: TextStyle(
+                              color: AppData.antiFlashWhite.withOpacity(
+                                0.7,
+                              ), // Colore testo "Nessun risultato"
+                            ),
+                          ),
+                        )
                       : ListView.builder(
-                    itemCount: _searchResults.length,
-                    itemBuilder: (context, index) {
-                      final trip = _searchResults[index];
-                      return Card(
-                        color:
-                        AppData.antiFlashWhite.withOpacity(0.15),
-                        margin: const EdgeInsets.symmetric(vertical: 8.0),
-                        elevation: 4,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                            12,
-                          ), // Consistent rounding
-                          side: BorderSide(
-                            color: AppData.silverLakeBlue.withOpacity(0.5),
-                            width: 1,
-                          ), // Subtle border
-                        ),
-                        child: InkWell(
-                          onTap: () async {
-                            await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    TripDetailScreen(trip: trip),
+                          itemCount: _searchResults.length,
+                          itemBuilder: (context, index) {
+                            final trip = _searchResults[index];
+                            final String? coverImageUrl =
+                                trip.imageUrls.isNotEmpty
+                                ? _sanitizeImagePath(trip.imageUrls.first)
+                                : null;
+                            return Card(
+                              color: AppData
+                                  .antiFlashWhite, // Sfondo della Card (bianco)
+                              margin: const EdgeInsets.symmetric(vertical: 8.0),
+                              elevation: 4,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                side: BorderSide(
+                                  color: AppData.silverLakeBlue.withOpacity(
+                                    0.5,
+                                  ), // Bordo della Card
+                                  width: 1,
+                                ),
                               ),
-                            );
-                            _performSearch();
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.all(12.0),
-                            child: Row(
-                              children: [
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                    CrossAxisAlignment.start,
+                              child: InkWell(
+                                onTap: () async {
+                                  await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          TripDetailScreen(trip: trip),
+                                    ),
+                                  );
+                                  _performSearch();
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.all(12.0),
+                                  child: Row(
                                     children: [
-                                      Text(
-                                        trip.title,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleLarge
-                                            ?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                          color:
-                                          AppData.charcoal,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        trip.location,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleMedium
-                                            ?.copyWith(
-                                          color: AppData.charcoal.withOpacity(
-                                            0.8,
-                                          ),
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        '${DateFormat('dd/MM/yyyy').format(trip.startDate)} - ${DateFormat('dd/MM/yyyy').format(trip.endDate)}',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium
-                                            ?.copyWith(
-                                          color:
-                                          AppData.silverLakeBlue,
+                                      // Visualizza l'immagine o il placeholder vuoto
+                                      _buildImageWidget(
+                                        coverImageUrl,
+                                        width:
+                                            80, // Dimensione immagine nella lista
+                                        height: 80,
+                                        fit: BoxFit.cover,
+                                        borderRadius: BorderRadius.circular(
+                                          8.0,
                                         ),
                                       ),
-                                      Text(
-                                        'Categoria: ${trip.category}',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodySmall
-                                            ?.copyWith(
-                                          color: AppData.silverLakeBlue
-                                              .withOpacity(
-                                            0.8,
-                                          ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              trip.title,
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .titleLarge
+                                                  ?.copyWith(
+                                                    fontWeight: FontWeight.bold,
+                                                    color: AppData
+                                                        .charcoal, // Colore del titolo del viaggio
+                                                  ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              trip.location,
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .titleMedium
+                                                  ?.copyWith(
+                                                    color: AppData.charcoal
+                                                        .withOpacity(
+                                                          0.8,
+                                                        ), // Colore della località
+                                                  ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              '${DateFormat('dd/MM/yyyy').format(trip.startDate)} - ${DateFormat('dd/MM/yyyy').format(trip.endDate)}',
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodyMedium
+                                                  ?.copyWith(
+                                                    color: AppData
+                                                        .silverLakeBlue, // Colore delle date
+                                                  ),
+                                            ),
+                                            Text(
+                                              'Categoria: ${trip.category}',
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodySmall
+                                                  ?.copyWith(
+                                                    color: AppData
+                                                        .silverLakeBlue
+                                                        .withOpacity(
+                                                          0.8,
+                                                        ), // Colore della categoria
+                                                  ),
+                                            ),
+                                          ],
                                         ),
                                       ),
                                     ],
                                   ),
                                 ),
-                              ],
-                            ),
-                          ),
+                              ),
+                            );
+                          },
                         ),
-                      );
-                    },
-                  ),
                 ),
               ],
             ),
