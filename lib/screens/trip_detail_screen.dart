@@ -2,12 +2,12 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'dart:io'; // Per File (necessario per Image.file se mostri immagini locali)
-import 'package:cached_network_image/cached_network_image.dart'; // Import per gestire immagini di rete
+import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../models/trip.dart';
 import '../helpers/trip_database_helper.dart';
-import 'add_edit_trip_screen.dart'; // Per la navigazione alla schermata di modifica
+import 'add_edit_trip_screen.dart';
 
 class TripDetailScreen extends StatefulWidget {
   final Trip trip;
@@ -20,47 +20,42 @@ class TripDetailScreen extends StatefulWidget {
 
 class _TripDetailScreenState extends State<TripDetailScreen> {
   late Trip _currentTrip;
-  late String _coverImageUrl; // Variabile per memorizzare l'URL dell'immagine di copertina
+  late String _coverImageUrl;
 
   @override
   void initState() {
     super.initState();
     _currentTrip = widget.trip;
-    _setCoverImage(); // Imposta l'immagine di copertina iniziale
-    _refreshTripDetails(); // Assicurati che i dettagli siano aggiornati all'apertura
+    _setCoverImage();
+    _refreshTripDetails();
   }
 
-  // Metodo per impostare l'immagine di copertina, inclusi i casi di fallback
   void _setCoverImage() {
     if (_currentTrip.imageUrls.isNotEmpty) {
       _coverImageUrl = _sanitizeImagePath(_currentTrip.imageUrls.first);
     } else {
-      // Imposta un'immagine di fallback se non ci sono URL
-      _coverImageUrl = 'assets/images/default_trip_cover.png'; // Assicurati che questo percorso esista!
+      _coverImageUrl = 'assets/images/default_trip_cover.png';
     }
   }
 
-  // Funzione per pulire il percorso dell'immagine
   String _sanitizeImagePath(String path) {
-    // Rimuove [" e "] all'inizio e alla fine e qualsiasi altra virgoletta doppia.
     return path.replaceAll('["', '').replaceAll('"]', '').replaceAll('"', '');
   }
 
-  // Metodo per ricaricare i dettagli del viaggio dal database
   Future<void> _refreshTripDetails() async {
     try {
       final updatedTrip = await TripDatabaseHelper.instance.getTripById(
         _currentTrip.id!,
       );
-      if (mounted) { // Corretto: usa 'mounted' direttamente
+      if (mounted) {
         setState(() {
           _currentTrip = updatedTrip;
-          _setCoverImage(); // Aggiorna l'immagine di copertina dopo il refresh
+          _setCoverImage();
         });
       }
     } catch (e) {
       debugPrint('Errore durante il ricaricamento del viaggio: $e');
-      if (mounted) { // Corretto: usa 'mounted' direttamente
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Impossibile ricaricare i dettagli del viaggio: $e'),
@@ -70,7 +65,6 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
     }
   }
 
-  // Metodo per gestire l'eliminazione del viaggio
   void _deleteTrip() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -97,14 +91,12 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
     if (confirmed == true) {
       try {
         await TripDatabaseHelper.instance.deleteTrip(_currentTrip.id!);
-        if (mounted) { // Corretto: usa 'mounted' direttamente
-          Navigator.of(
-            context,
-          ).pop(true); // Indica che il viaggio è stato eliminato
+        if (mounted) {
+          Navigator.of(context).pop(true);
         }
       } catch (e) {
         debugPrint('Errore durante l\'eliminazione del viaggio: $e');
-        if (mounted) { // Corretto: usa 'mounted' direttamente
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Errore durante l\'eliminazione: $e')),
           );
@@ -113,7 +105,6 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
     }
   }
 
-  // Metodo per navigare alla schermata di modifica
   void _editTrip() async {
     final updatedTrip = await Navigator.of(context).push(
       MaterialPageRoute(
@@ -121,10 +112,10 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
       ),
     );
 
-    if (updatedTrip != null && mounted) { // Corretto: usa 'mounted' direttamente
+    if (updatedTrip != null && mounted) {
       setState(() {
-        _currentTrip = updatedTrip as Trip; // Assicurati il tipo
-        _setCoverImage(); // Aggiorna l'immagine di copertina
+        _currentTrip = updatedTrip as Trip;
+        _setCoverImage();
       });
     }
   }
@@ -154,7 +145,6 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
               color: Colors.white,
             ),
             onPressed: () async {
-              // Inverti lo stato di preferito e aggiorna il DB
               final updatedTrip = _currentTrip.copy(
                 isFavorite: !_currentTrip.isFavorite,
               );
@@ -193,7 +183,6 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Immagine di copertina del viaggio
                 Container(
                   height: 250,
                   width: double.infinity,
@@ -212,14 +201,11 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                     ],
                   ),
                   child: ClipRRect(
-                    // Aggiunto ClipRRect per applicare il border radius all'immagine stessa
                     borderRadius: const BorderRadius.only(
                       bottomLeft: Radius.circular(20),
                       bottomRight: Radius.circular(20),
                     ),
-                    child: _buildCoverImageWidget(
-                      _coverImageUrl,
-                    ), // Usa il nuovo metodo di costruzione
+                    child: _buildCoverImageWidget(_coverImageUrl),
                   ),
                 ),
                 Padding(
@@ -272,8 +258,8 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                                     ],
                                   ),
                                 )
-                              : const SizedBox.shrink(), // Non mostrare nulla se non è preferito
-                          const SizedBox(width: 10), // Spazio tra i bottoni
+                              : const SizedBox.shrink(),
+                          const SizedBox(width: 10),
 
                           _currentTrip.toBeRepeated
                               ? Container(
@@ -303,7 +289,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                                     ],
                                   ),
                                 )
-                              : const SizedBox.shrink(), // Non mostrare nulla se non è da ripetere
+                              : const SizedBox.shrink(),
                         ],
                       ),
                       const SizedBox(height: 20),
@@ -341,14 +327,13 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                       const SizedBox(height: 10),
                       _currentTrip.imageUrls.isNotEmpty
                           ? SizedBox(
-                              height: 120, // Altezza fissa per la galleria
+                              height: 120,
                               child: ListView.builder(
                                 scrollDirection: Axis.horizontal,
                                 itemCount: _currentTrip.imageUrls.length,
                                 itemBuilder: (ctx, index) {
                                   final String rawImageUrl =
                                       _currentTrip.imageUrls[index];
-                                  // SANITIZZA IL PERCORSO QUI
                                   final String imageUrl = _sanitizeImagePath(
                                     rawImageUrl,
                                   );
@@ -386,7 +371,6 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                                       },
                                     );
                                   } else {
-                                    // Presumi sia un percorso di file locale
                                     imageWidget = FutureBuilder<bool>(
                                       future: File(imageUrl).exists(),
                                       builder: (context, snapshot) {
@@ -425,8 +409,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                                     padding: const EdgeInsets.only(right: 8.0),
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(10),
-                                      child:
-                                          imageWidget, // Usa il widget creato dinamicamente
+                                      child: imageWidget,
                                     ),
                                   );
                                 },
@@ -448,7 +431,6 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
     );
   }
 
-  // Per gestire i diversi tipi di URL per l'immagine di copertina
   Widget _buildCoverImageWidget(String imageUrl) {
     if (imageUrl.startsWith('assets/')) {
       return Image.asset(
@@ -469,25 +451,23 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
         placeholder: (context, url) =>
             const Center(child: CircularProgressIndicator()),
         errorWidget: (context, url, error) {
-          debugPrint('Errore caricamento network copertina: $url, Errore: $error');
+          debugPrint(
+            'Errore caricamento network copertina: $url, Errore: $error',
+          );
           return _buildErrorPlaceholder();
         },
       );
     } else {
-      // Consideriamo che sia un percorso di file locale (dal simulatore/dispositivo)
-      // Usiamo FutureBuilder per verificare l'esistenza del file
       return FutureBuilder<bool>(
         future: File(imageUrl).exists(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             if (snapshot.hasError || !(snapshot.data ?? false)) {
-              // Il file non esiste o c'è stato un errore
               debugPrint(
                 'Errore caricamento file locale copertina: $imageUrl, Errore: ${snapshot.error ?? "File non trovato"}',
               );
               return _buildErrorPlaceholder();
             } else {
-              // Il file esiste, caricalo
               return Image.file(
                 File(imageUrl),
                 fit: BoxFit.cover,
@@ -500,17 +480,15 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
               );
             }
           }
-          // Mentre aspettiamo, mostra un indicatore di caricamento
           return const Center(child: CircularProgressIndicator());
         },
       );
     }
   }
 
-  // Piccolo widget di utility per il placeholder in caso di errore (copertina)
   Widget _buildErrorPlaceholder() {
     return Container(
-      color: Colors.grey[800], // Sfondo scuro per indicare l'errore
+      color: Colors.grey[800],
       child: const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -528,7 +506,6 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
     );
   }
 
-  // Piccolo widget di utility per il placeholder in caso di errore nella galleria
   Widget _buildGalleryErrorPlaceholder() {
     return Container(
       width: 120,

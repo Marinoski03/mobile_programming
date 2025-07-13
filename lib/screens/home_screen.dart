@@ -2,8 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'dart:io'; // Necessario per File().exists()
-import 'package:cached_network_image/cached_network_image.dart'; // Necessario per immagini di rete
+import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../models/trip.dart';
 import '../helpers/trip_database_helper.dart';
@@ -12,7 +12,6 @@ import 'analysis_screen.dart';
 import 'categories_screen.dart';
 import 'search_screen.dart';
 import 'trip_detail_screen.dart';
-// Assicurati che AppData sia importato per i placeholder
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -44,16 +43,20 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _navigateToScreen(BuildContext context, Widget screen) async {
     await Navigator.push(context, MaterialPageRoute(builder: (ctx) => screen));
-    _refreshTrips(); // Aggiorna i viaggi dopo essere tornato da una schermata
+    _refreshTrips();
   }
 
-  // Funzione per pulire il percorso dell'immagine (copia da trip_detail_screen.dart)
   String _sanitizeImagePath(String path) {
     return path.replaceAll('["', '').replaceAll('"]', '').replaceAll('"', '');
   }
 
-  // Widget per costruire l'immagine (adattato da trip_detail_screen.dart)
-  Widget _buildImageWidget(String imageUrl, {double? width, double? height, BoxFit? fit, BorderRadius? borderRadius}) {
+  Widget _buildImageWidget(
+    String imageUrl, {
+    double? width,
+    double? height,
+    BoxFit? fit,
+    BorderRadius? borderRadius,
+  }) {
     Widget imageWidget;
     if (imageUrl.startsWith('assets/')) {
       imageWidget = Image.asset(
@@ -66,26 +69,29 @@ class _HomeScreenState extends State<HomeScreen> {
           return _buildErrorPlaceholder(width: width, height: height);
         },
       );
-    } else if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+    } else if (imageUrl.startsWith('http://') ||
+        imageUrl.startsWith('https://')) {
       imageWidget = CachedNetworkImage(
         imageUrl: imageUrl,
         width: width,
         height: height,
         fit: fit ?? BoxFit.cover,
-        placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+        placeholder: (context, url) =>
+            const Center(child: CircularProgressIndicator()),
         errorWidget: (context, url, error) {
           debugPrint('Errore caricamento network: $url, Errore: $error');
           return _buildErrorPlaceholder(width: width, height: height);
         },
       );
     } else {
-      // Consideriamo che sia un percorso di file locale
       imageWidget = FutureBuilder<bool>(
         future: File(imageUrl).exists(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             if (snapshot.hasError || !(snapshot.data ?? false)) {
-              debugPrint('Errore caricamento file locale: $imageUrl, Errore: ${snapshot.error ?? "File non trovato"}');
+              debugPrint(
+                'Errore caricamento file locale: $imageUrl, Errore: ${snapshot.error ?? "File non trovato"}',
+              );
               return _buildErrorPlaceholder(width: width, height: height);
             } else {
               return Image.file(
@@ -94,7 +100,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: height,
                 fit: fit ?? BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
-                  debugPrint('Errore caricamento Image.file: $imageUrl, Errore: $error');
+                  debugPrint(
+                    'Errore caricamento Image.file: $imageUrl, Errore: $error',
+                  );
                   return _buildErrorPlaceholder(width: width, height: height);
                 },
               );
@@ -105,23 +113,22 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
 
-    // Applica il borderRadius se fornito
     if (borderRadius != null) {
-      return ClipRRect(
-        borderRadius: borderRadius,
-        child: imageWidget,
-      );
+      return ClipRRect(borderRadius: borderRadius, child: imageWidget);
     }
     return imageWidget;
   }
 
-  // Placeholder di errore generale
   Widget _buildErrorPlaceholder({double? width, double? height}) {
     return Container(
       width: width,
       height: height,
       color: Colors.grey[300],
-      child: Icon(Icons.image_not_supported, color: Colors.grey[600], size: (width ?? 50) / 2),
+      child: Icon(
+        Icons.image_not_supported,
+        color: Colors.grey[600],
+        size: (width ?? 50) / 2,
+      ),
     );
   }
 
@@ -204,9 +211,10 @@ class _HomeScreenState extends State<HomeScreen> {
                               itemCount: _trips.length > 3 ? 3 : _trips.length,
                               itemBuilder: (context, index) {
                                 final trip = _trips[index];
-                                final String coverImageUrl = trip.imageUrls.isNotEmpty
+                                final String coverImageUrl =
+                                    trip.imageUrls.isNotEmpty
                                     ? _sanitizeImagePath(trip.imageUrls.first)
-                                    : 'assets/images/default_trip_cover.png'; // Fallback
+                                    : 'assets/images/default_trip_cover.png';
 
                                 return Card(
                                   margin: const EdgeInsets.symmetric(
@@ -223,17 +231,17 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                     child: Row(
                                       children: [
-                                        // Immagine a sinistra
                                         _buildImageWidget(
                                           coverImageUrl,
                                           width: 100,
                                           height: 100,
                                           fit: BoxFit.cover,
-                                          borderRadius: BorderRadius.circular(8.0), // Applica bordo rotondo all'immagine
+                                          borderRadius: BorderRadius.circular(
+                                            8.0,
+                                          ),
                                         ),
-                                        const SizedBox(width: 12), // Spazio tra immagine e testo
+                                        const SizedBox(width: 12),
 
-                                        // Sezione Contenuto Testuale
                                         Expanded(
                                           child: Padding(
                                             padding: const EdgeInsets.all(12.0),
@@ -250,10 +258,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                                         fontWeight:
                                                             FontWeight.bold,
                                                       ),
-                                                  maxLines:
-                                                      1, // Limita a una riga
-                                                  overflow: TextOverflow
-                                                      .ellipsis, // Aggiunge "..."
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
                                                 ),
                                                 const SizedBox(height: 4),
                                                 Text(
@@ -272,7 +279,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                                     context,
                                                   ).textTheme.bodyMedium,
                                                 ),
-                                                // *** INIZIO MODIFICA: AGGIUNTA BADGE ***
                                                 if (trip.isFavorite ||
                                                     trip.toBeRepeated)
                                                   Padding(
@@ -289,15 +295,16 @@ class _HomeScreenState extends State<HomeScreen> {
                                                                   horizontal: 8,
                                                                   vertical: 4,
                                                                 ),
-                                                            decoration: BoxDecoration(
-                                                              color: Colors
-                                                                  .amber
-                                                                  .shade700,
-                                                              borderRadius:
-                                                                  BorderRadius.circular(
-                                                                    15,
-                                                                  ),
-                                                            ),
+                                                            decoration:
+                                                                BoxDecoration(
+                                                                  color: Colors
+                                                                      .amber
+                                                                      .shade700,
+                                                                  borderRadius:
+                                                                      BorderRadius.circular(
+                                                                        15,
+                                                                      ),
+                                                                ),
                                                             child: Row(
                                                               children: [
                                                                 const Icon(
@@ -332,15 +339,16 @@ class _HomeScreenState extends State<HomeScreen> {
                                                                   horizontal: 8,
                                                                   vertical: 4,
                                                                 ),
-                                                            decoration: BoxDecoration(
-                                                              color: Colors
-                                                                  .green
-                                                                  .shade700,
-                                                              borderRadius:
-                                                                  BorderRadius.circular(
-                                                                    15,
-                                                                  ),
-                                                            ),
+                                                            decoration:
+                                                                BoxDecoration(
+                                                                  color: Colors
+                                                                      .green
+                                                                      .shade700,
+                                                                  borderRadius:
+                                                                      BorderRadius.circular(
+                                                                        15,
+                                                                      ),
+                                                                ),
                                                             child: Row(
                                                               children: [
                                                                 const Icon(
@@ -368,7 +376,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                                       ],
                                                     ),
                                                   ),
-                                                // *** FINE MODIFICA: AGGIUNTA BADGE ***
                                               ],
                                             ),
                                           ),
@@ -404,9 +411,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                 itemCount: _favoriteTrips.length,
                                 itemBuilder: (context, index) {
                                   final trip = _favoriteTrips[index];
-                                  final String coverImageUrl = trip.imageUrls.isNotEmpty
+                                  final String coverImageUrl =
+                                      trip.imageUrls.isNotEmpty
                                       ? _sanitizeImagePath(trip.imageUrls.first)
-                                      : 'assets/images/default_trip_cover.png'; // Fallback
+                                      : 'assets/images/default_trip_cover.png';
 
                                   return GestureDetector(
                                     onTap: () => _navigateToScreen(
@@ -428,19 +436,21 @@ class _HomeScreenState extends State<HomeScreen> {
                                           ),
                                         ],
                                       ),
-                                      child: Column( // Questo è il Column per l'elemento
+                                      child: Column(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          // Immagine in cima
                                           _buildImageWidget(
                                             coverImageUrl,
-                                            width: double.infinity, // Prende tutta la larghezza del contenitore
-                                            height: 100, // Altezza fissa per l'immagine
+                                            width: double.infinity,
+                                            height: 100,
                                             fit: BoxFit.cover,
-                                            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)), // Bordo rotondo solo in alto
+                                            borderRadius:
+                                                const BorderRadius.vertical(
+                                                  top: Radius.circular(12),
+                                                ),
                                           ),
-                                          Padding( // Padding esistente per il contenuto testuale
+                                          Padding(
                                             padding: const EdgeInsets.all(8.0),
                                             child: Column(
                                               crossAxisAlignment:
@@ -483,10 +493,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _navigateToScreen(
-          context,
-          const AddEditTripScreen(),
-        ),
+        onPressed: () => _navigateToScreen(context, const AddEditTripScreen()),
         icon: const Icon(Icons.add),
         label: const Text('Aggiungi Viaggio'),
         backgroundColor: Colors.white,
