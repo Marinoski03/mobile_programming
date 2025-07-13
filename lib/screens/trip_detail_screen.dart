@@ -129,13 +129,13 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                 _currentTrip.title,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   color: AppData
-                      .charcoal, // Colore del titolo nella AppBar cambiato a charcoal
+                      .antiFlashWhite, // Colore del titolo nella AppBar cambiato a antiFlashWhite
                   fontWeight: FontWeight.bold,
                   shadows: [
                     Shadow(
                       offset: const Offset(1.0, 1.0),
                       blurRadius: 3.0,
-                      color: AppData.antiFlashWhite.withOpacity(
+                      color: AppData.charcoal.withOpacity(
                         0.5,
                       ), // Colore ombra del titolo
                     ),
