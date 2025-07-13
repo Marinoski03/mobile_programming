@@ -1,6 +1,9 @@
 // lib/utils/app_data.dart
-// TODO Implement this library.
+
+import 'package:flutter/material.dart';
+
 class AppData {
+  // ***** CATEGORIE ESISTENTI *****
   static const List<String> categories = [
     'Avventura',
     'Cultura',
@@ -11,4 +14,5 @@ class AppData {
     'Lavoro',
     'Altro',
   ];
+  // ********************************
 }

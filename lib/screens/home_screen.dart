@@ -12,6 +12,7 @@ import 'analysis_screen.dart';
 import 'categories_screen.dart';
 import 'search_screen.dart';
 import 'trip_detail_screen.dart';
+import '../utils/app_data.dart'; // Importa AppData per i colori
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -50,13 +51,8 @@ class _HomeScreenState extends State<HomeScreen> {
     return path.replaceAll('["', '').replaceAll('"]', '').replaceAll('"', '');
   }
 
-  Widget _buildImageWidget(
-    String imageUrl, {
-    double? width,
-    double? height,
-    BoxFit? fit,
-    BorderRadius? borderRadius,
-  }) {
+  // Widget per costruire l'immagine (adattato da trip_detail_screen.dart)
+  Widget _buildImageWidget(String imageUrl, {double? width, double? height, BoxFit? fit, BorderRadius? borderRadius}) {
     Widget imageWidget;
     if (imageUrl.startsWith('assets/')) {
       imageWidget = Image.asset(
@@ -89,9 +85,7 @@ class _HomeScreenState extends State<HomeScreen> {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             if (snapshot.hasError || !(snapshot.data ?? false)) {
-              debugPrint(
-                'Errore caricamento file locale: $imageUrl, Errore: ${snapshot.error ?? "File non trovato"}',
-              );
+              debugPrint('Errore caricamento file locale: $imageUrl, Errore: ${snapshot.error ?? "File non trovato"}');
               return _buildErrorPlaceholder(width: width, height: height);
             } else {
               return Image.file(
@@ -100,9 +94,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: height,
                 fit: fit ?? BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
-                  debugPrint(
-                    'Errore caricamento Image.file: $imageUrl, Errore: $error',
-                  );
+                  debugPrint('Errore caricamento Image.file: $imageUrl, Errore: $error');
                   return _buildErrorPlaceholder(width: width, height: height);
                 },
               );
@@ -119,16 +111,13 @@ class _HomeScreenState extends State<HomeScreen> {
     return imageWidget;
   }
 
+  // Placeholder di errore generale
   Widget _buildErrorPlaceholder({double? width, double? height}) {
     return Container(
       width: width,
       height: height,
       color: Colors.grey[300],
-      child: Icon(
-        Icons.image_not_supported,
-        color: Colors.grey[600],
-        size: (width ?? 50) / 2,
-      ),
+      child: Icon(Icons.image_not_supported, color: Colors.grey[600], size: (width ?? 50) / 2),
     );
   }
 
@@ -137,50 +126,58 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       backgroundColor: Colors.transparent,
-
       appBar: AppBar(
         title: const Text(
           'I Miei Viaggi',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(
+              color: AppData.antiFlashWhite), // Colore del testo aggiornato
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.category, color: Colors.white),
+            icon: const Icon(Icons.category,
+                color: AppData.antiFlashWhite), // Colore icona aggiornato
             onPressed: () =>
                 _navigateToScreen(context, const CategoriesScreen()),
           ),
           IconButton(
-            icon: const Icon(Icons.search, color: Colors.white),
+            icon: const Icon(Icons.search,
+                color: AppData.antiFlashWhite), // Colore icona aggiornato
             onPressed: () => _navigateToScreen(context, const SearchScreen()),
           ),
           IconButton(
-            icon: const Icon(Icons.bar_chart, color: Colors.white),
+            icon: const Icon(Icons.bar_chart,
+                color: AppData.antiFlashWhite), // Colore icona aggiornato
             onPressed: () => _navigateToScreen(context, const AnalysisScreen()),
           ),
         ],
       ),
-
       body: Container(
         width: double.infinity,
         height: double.infinity,
         decoration: BoxDecoration(
+          // Gradiente con colori AppData
           gradient: LinearGradient(
-            colors: [Colors.blue.shade300, Colors.blue.shade800],
+            colors: [
+              AppData.silverLakeBlue.withOpacity(0.7),
+              AppData.charcoal.withOpacity(0.9)
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
         ),
         child: SafeArea(
           child: _trips.isEmpty && _favoriteTrips.isEmpty
-              ? const Center(
+              ? Center(
                   child: Padding(
-                    padding: EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.all(16.0),
                     child: Text(
                       'Nessun viaggio aggiunto ancora. Tocca il "+" per iniziare!',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.white70),
+                      style: TextStyle(
+                          color: AppData.antiFlashWhite
+                              .withOpacity(0.7)), // Colore testo aggiornato
                     ),
                   ),
                 )
@@ -194,15 +191,17 @@ class _HomeScreenState extends State<HomeScreen> {
                         style: Theme.of(context).textTheme.headlineSmall
                             ?.copyWith(
                               fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                              color: AppData.antiFlashWhite, // Colore testo aggiornato
                             ),
                       ),
                       const SizedBox(height: 10),
                       _trips.isEmpty
-                          ? const Center(
+                          ? Center(
                               child: Text(
                                 'Nessun viaggio trovato.',
-                                style: TextStyle(color: Colors.white70),
+                                style: TextStyle(
+                                    color: AppData.antiFlashWhite
+                                        .withOpacity(0.7)), // Colore testo aggiornato
                               ),
                             )
                           : ListView.builder(
@@ -211,12 +210,13 @@ class _HomeScreenState extends State<HomeScreen> {
                               itemCount: _trips.length > 3 ? 3 : _trips.length,
                               itemBuilder: (context, index) {
                                 final trip = _trips[index];
-                                final String coverImageUrl =
-                                    trip.imageUrls.isNotEmpty
+                                final String coverImageUrl = trip.imageUrls.isNotEmpty
                                     ? _sanitizeImagePath(trip.imageUrls.first)
-                                    : 'assets/images/default_trip_cover.png';
+                                    : 'assets/images/default_trip_cover.png'; // Fallback
 
                                 return Card(
+                                  // Colore Card aggiornato
+                                  color: AppData.antiFlashWhite,
                                   margin: const EdgeInsets.symmetric(
                                     vertical: 8.0,
                                   ),
@@ -236,11 +236,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                           width: 100,
                                           height: 100,
                                           fit: BoxFit.cover,
-                                          borderRadius: BorderRadius.circular(
-                                            8.0,
-                                          ),
+                                          borderRadius: BorderRadius.circular(8.0), // Applica bordo rotondo all'immagine
                                         ),
-                                        const SizedBox(width: 12),
+                                        const SizedBox(width: 12), // Spazio tra immagine e testo
 
                                         Expanded(
                                           child: Padding(
@@ -257,17 +255,24 @@ class _HomeScreenState extends State<HomeScreen> {
                                                       ?.copyWith(
                                                         fontWeight:
                                                             FontWeight.bold,
+                                                        color: AppData
+                                                            .charcoal, // Colore testo aggiornato
                                                       ),
-                                                  maxLines: 1,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
+                                                  maxLines:
+                                                      1, // Limita a una riga
+                                                  overflow: TextOverflow
+                                                      .ellipsis, // Aggiunge "..."
                                                 ),
                                                 const SizedBox(height: 4),
                                                 Text(
                                                   trip.location,
                                                   style: Theme.of(
                                                     context,
-                                                  ).textTheme.titleMedium,
+                                                  ).textTheme.titleMedium
+                                                      ?.copyWith(
+                                                          color: AppData.charcoal
+                                                              .withOpacity(
+                                                                  0.8)), // Colore testo aggiornato
                                                   maxLines: 1,
                                                   overflow:
                                                       TextOverflow.ellipsis,
@@ -277,7 +282,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                                   '${DateFormat('dd/MM/yyyy').format(trip.startDate)} - ${DateFormat('dd/MM/yyyy').format(trip.endDate)}',
                                                   style: Theme.of(
                                                     context,
-                                                  ).textTheme.bodyMedium,
+                                                  ).textTheme.bodyMedium?.copyWith(
+                                                      color: AppData
+                                                          .silverLakeBlue), // Colore testo aggiornato
                                                 ),
                                                 if (trip.isFavorite ||
                                                     trip.toBeRepeated)
@@ -295,22 +302,21 @@ class _HomeScreenState extends State<HomeScreen> {
                                                                   horizontal: 8,
                                                                   vertical: 4,
                                                                 ),
-                                                            decoration:
-                                                                BoxDecoration(
-                                                                  color: Colors
-                                                                      .amber
-                                                                      .shade700,
-                                                                  borderRadius:
-                                                                      BorderRadius.circular(
-                                                                        15,
-                                                                      ),
-                                                                ),
+                                                            decoration: BoxDecoration(
+                                                              color: Colors
+                                                                  .amber
+                                                                  .shade700,
+                                                              borderRadius:
+                                                                  BorderRadius.circular(
+                                                                    15,
+                                                                  ),
+                                                            ),
                                                             child: Row(
                                                               children: [
                                                                 const Icon(
                                                                   Icons.star,
-                                                                  color: Colors
-                                                                      .white,
+                                                                  color: AppData
+                                                                      .antiFlashWhite, // Colore icona aggiornato
                                                                   size: 16,
                                                                 ),
                                                                 const SizedBox(
@@ -318,12 +324,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                                                 ),
                                                                 Text(
                                                                   'Preferito',
-                                                                  style: Theme.of(context)
+                                                                  style: Theme.of(
+                                                                          context)
                                                                       .textTheme
                                                                       .bodySmall
                                                                       ?.copyWith(
-                                                                        color: Colors
-                                                                            .white,
+                                                                        color: AppData
+                                                                            .antiFlashWhite, // Colore testo badge aggiornato
                                                                       ),
                                                                 ),
                                                               ],
@@ -339,22 +346,21 @@ class _HomeScreenState extends State<HomeScreen> {
                                                                   horizontal: 8,
                                                                   vertical: 4,
                                                                 ),
-                                                            decoration:
-                                                                BoxDecoration(
-                                                                  color: Colors
-                                                                      .green
-                                                                      .shade700,
-                                                                  borderRadius:
-                                                                      BorderRadius.circular(
-                                                                        15,
-                                                                      ),
-                                                                ),
+                                                            decoration: BoxDecoration(
+                                                              color: Colors
+                                                                  .green
+                                                                  .shade700,
+                                                              borderRadius:
+                                                                  BorderRadius.circular(
+                                                                    15,
+                                                                  ),
+                                                            ),
                                                             child: Row(
                                                               children: [
                                                                 const Icon(
                                                                   Icons.repeat,
-                                                                  color: Colors
-                                                                      .white,
+                                                                  color: AppData
+                                                                      .antiFlashWhite, // Colore icona aggiornato
                                                                   size: 16,
                                                                 ),
                                                                 const SizedBox(
@@ -362,12 +368,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                                                 ),
                                                                 Text(
                                                                   'Da ripetere',
-                                                                  style: Theme.of(context)
+                                                                  style: Theme.of(
+                                                                          context)
                                                                       .textTheme
                                                                       .bodySmall
                                                                       ?.copyWith(
-                                                                        color: Colors
-                                                                            .white,
+                                                                        color: AppData
+                                                                            .antiFlashWhite, // Colore testo badge aggiornato
                                                                       ),
                                                                 ),
                                                               ],
@@ -387,21 +394,22 @@ class _HomeScreenState extends State<HomeScreen> {
                               },
                             ),
                       const SizedBox(height: 30),
-
                       Text(
                         'Destinazioni preferite',
                         style: Theme.of(context).textTheme.headlineSmall
                             ?.copyWith(
                               fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                              color: AppData.antiFlashWhite, // Colore testo aggiornato
                             ),
                       ),
                       const SizedBox(height: 10),
                       _favoriteTrips.isEmpty
-                          ? const Center(
+                          ? Center(
                               child: Text(
                                 'Nessuna destinazione preferita ancora. Aggiungi un viaggio ai preferiti!',
-                                style: TextStyle(color: Colors.white70),
+                                style: TextStyle(
+                                    color: AppData.antiFlashWhite
+                                        .withOpacity(0.7)), // Colore testo aggiornato
                               ),
                             )
                           : SizedBox(
@@ -411,10 +419,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                 itemCount: _favoriteTrips.length,
                                 itemBuilder: (context, index) {
                                   final trip = _favoriteTrips[index];
-                                  final String coverImageUrl =
-                                      trip.imageUrls.isNotEmpty
+                                  final String coverImageUrl = trip.imageUrls.isNotEmpty
                                       ? _sanitizeImagePath(trip.imageUrls.first)
-                                      : 'assets/images/default_trip_cover.png';
+                                      : 'assets/images/default_trip_cover.png'; // Fallback
 
                                   return GestureDetector(
                                     onTap: () => _navigateToScreen(
@@ -423,34 +430,34 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                     child: Container(
                                       width: 150,
-                                      margin: const EdgeInsets.only(right: 15),
+                                      margin:
+                                          const EdgeInsets.only(right: 15),
                                       decoration: BoxDecoration(
-                                        color: Theme.of(context).cardColor,
+                                        // Colore sfondo card preferiti aggiornato
+                                        color: AppData.antiFlashWhite,
                                         borderRadius: BorderRadius.circular(12),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: Colors.grey.withOpacity(0.3),
+                                            // Colore ombra aggiornato
+                                            color: AppData.charcoal.withOpacity(0.3),
                                             spreadRadius: 2,
                                             blurRadius: 5,
                                             offset: const Offset(0, 3),
                                           ),
                                         ],
                                       ),
-                                      child: Column(
+                                      child: Column( // Questo è il Column per l'elemento
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
                                           _buildImageWidget(
                                             coverImageUrl,
-                                            width: double.infinity,
-                                            height: 100,
+                                            width: double.infinity, // Prende tutta la larghezza del contenitore
+                                            height: 100, // Altezza fissa per l'immagine
                                             fit: BoxFit.cover,
-                                            borderRadius:
-                                                const BorderRadius.vertical(
-                                                  top: Radius.circular(12),
-                                                ),
+                                            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)), // Bordo rotondo solo in alto
                                           ),
-                                          Padding(
+                                          Padding( // Padding esistente per il contenuto testuale
                                             padding: const EdgeInsets.all(8.0),
                                             child: Column(
                                               crossAxisAlignment:
@@ -460,6 +467,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                   trip.title,
                                                   style: const TextStyle(
                                                     fontWeight: FontWeight.bold,
+                                                    color: AppData.charcoal, // Colore testo aggiornato
                                                   ),
                                                   maxLines: 1,
                                                   overflow:
@@ -468,8 +476,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 const SizedBox(height: 4),
                                                 Text(
                                                   trip.location,
-                                                  style: const TextStyle(
-                                                    color: Colors.grey,
+                                                  style: TextStyle(
+                                                    color: AppData.charcoal.withOpacity(0.6), // Colore testo aggiornato
                                                     fontSize: 12,
                                                   ),
                                                   maxLines: 1,
@@ -496,8 +504,9 @@ class _HomeScreenState extends State<HomeScreen> {
         onPressed: () => _navigateToScreen(context, const AddEditTripScreen()),
         icon: const Icon(Icons.add),
         label: const Text('Aggiungi Viaggio'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.blue.shade700,
+        // Colori FAB aggiornati
+        backgroundColor: AppData.antiFlashWhite,
+        foregroundColor: AppData.silverLakeBlue,
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
