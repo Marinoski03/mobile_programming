@@ -1,16 +1,14 @@
 // lib/screens/add_edit_trip_screen.dart
 
-// lib/screens/add_edit_trip_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'dart:io';
-import 'dart:convert'; // Import for JSON decoding
-import 'package:http/http.dart' as http; // Import http package
-import 'dart:async'; // Import for Timer (debouncing)
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'dart:async';
 
 import '../models/trip.dart';
 import '../helpers/trip_database_helper.dart';
