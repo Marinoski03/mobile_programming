@@ -8,7 +8,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../models/trip.dart';
 import '../helpers/trip_database_helper.dart';
 import 'add_edit_trip_screen.dart';
-import '../utils/app_data.dart'; // Importa AppData per i colori
+import '../utils/app_data.dart'; 
 
 class TripDetailScreen extends StatefulWidget {
   final Trip trip;
@@ -70,7 +70,6 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        // Colori dell'AlertDialog (sfondo e testo) come da palette
         backgroundColor: AppData.antiFlashWhite,
         title: const Text(
           'Conferma Eliminazione',
@@ -91,7 +90,6 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
             },
           ),
           TextButton(
-            // Colore del testo "Elimina" aggiornato a AppData.cerise
             child: const Text('Elimina', style: TextStyle(color: AppData.cerise)),
             onPressed: () {
               Navigator.of(ctx).pop(true);
@@ -104,10 +102,10 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
     if (confirmed == true) {
       try {
         await TripDatabaseHelper.instance.deleteTrip(_currentTrip.id!);
-        if (mounted) { // Corretto: usa 'mounted' direttamente
+        if (mounted) { 
           Navigator.of(
             context,
-          ).pop(true); // Indica che il viaggio è stato eliminato
+          ).pop(true);
         }
       } catch (e) {
         debugPrint('Errore durante l\'eliminazione del viaggio: $e');
@@ -145,17 +143,15 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      backgroundColor: Colors.transparent, // Lo sfondo sarà gestito dal Container sottostante
+      backgroundColor: Colors.transparent, 
       appBar: AppBar(
         title: Text(
           _currentTrip.title,
-          // Colore del titolo aggiornato a AppData.antiFlashWhite
           style: const TextStyle(color: AppData.antiFlashWhite),
         ),
-        backgroundColor: Colors.transparent, // Mantenuta trasparente per il gradiente
+        backgroundColor: Colors.transparent, 
         elevation: 0,
         leading: IconButton(
-          // Colore dell'icona indietro aggiornato a AppData.antiFlashWhite
           icon: const Icon(Icons.arrow_back, color: AppData.antiFlashWhite),
           onPressed: () {
             Navigator.of(context).pop();
@@ -165,7 +161,6 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
           IconButton(
             icon: Icon(
               _currentTrip.isFavorite ? Icons.star : Icons.star_border,
-              // Colore dell'icona preferito aggiornato a AppData.antiFlashWhite
               color: AppData.antiFlashWhite,
             ),
             onPressed: () async {
@@ -183,12 +178,10 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
             },
           ),
           IconButton(
-            // Colore dell'icona modifica aggiornato a AppData.antiFlashWhite
             icon: const Icon(Icons.edit, color: AppData.antiFlashWhite),
             onPressed: _editTrip,
           ),
           IconButton(
-            // Colore dell'icona elimina aggiornato a AppData.antiFlashWhite
             icon: const Icon(Icons.delete, color: AppData.antiFlashWhite),
             onPressed: _deleteTrip,
           ),
@@ -198,7 +191,6 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
         width: double.infinity,
         height: double.infinity,
         decoration: BoxDecoration(
-          // Colori del gradiente aggiornati con AppData
           gradient: LinearGradient(
             colors: [AppData.silverLakeBlue.withOpacity(0.7), AppData.charcoal.withOpacity(0.9)],
             begin: Alignment.topLeft,
@@ -220,7 +212,6 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        // Colore dell'ombra aggiornato a AppData.charcoal
                         color: AppData.charcoal.withOpacity(0.3),
                         spreadRadius: 2,
                         blurRadius: 5,
@@ -245,7 +236,6 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                         _currentTrip.location,
                         style: Theme.of(context).textTheme.headlineMedium
                             ?.copyWith(
-                              // Colore del testo aggiornato a AppData.antiFlashWhite
                               color: AppData.antiFlashWhite,
                               fontWeight: FontWeight.bold,
                             ),
@@ -254,7 +244,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                       Text(
                         '${DateFormat('dd/MM/yyyy').format(_currentTrip.startDate)} - ${DateFormat('dd/MM/yyyy').format(_currentTrip.endDate)}',
                         style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(color: AppData.antiFlashWhite.withOpacity(0.7)), // Colore aggiornato
+                            ?.copyWith(color: AppData.antiFlashWhite.withOpacity(0.7)), 
                       ),
                       const SizedBox(height: 15),
                       Row(
@@ -266,13 +256,11 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                                     vertical: 5,
                                   ),
                                   decoration: BoxDecoration(
-                                    // Colore del badge Preferito aggiornato a AppData.cerise
                                     color: AppData.cerise,
                                     borderRadius: BorderRadius.circular(20),
                                   ),
                                   child: Row(
                                     children: [
-                                      // Colore dell'icona stella aggiornato a AppData.antiFlashWhite
                                       const Icon(
                                         Icons.star,
                                         color: AppData.antiFlashWhite,
@@ -284,7 +272,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                                         style: Theme.of(context)
                                             .textTheme
                                             .bodyMedium
-                                            ?.copyWith(color: AppData.antiFlashWhite), // Colore testo badge aggiornato
+                                            ?.copyWith(color: AppData.antiFlashWhite), 
                                       ),
                                     ],
                                   ),
@@ -299,13 +287,11 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                                     vertical: 5,
                                   ),
                                   decoration: BoxDecoration(
-                                    // Colore del badge "Segna da ripetere" aggiornato a AppData.charcoal
                                     color: AppData.charcoal,
                                     borderRadius: BorderRadius.circular(20),
                                   ),
                                   child: Row(
                                     children: [
-                                      // Colore dell'icona repeat aggiornato a AppData.antiFlashWhite
                                       const Icon(
                                         Icons.repeat,
                                         color: AppData.antiFlashWhite,
@@ -317,7 +303,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                                         style: Theme.of(context)
                                             .textTheme
                                             .bodyMedium
-                                            ?.copyWith(color: AppData.antiFlashWhite), // Colore testo badge aggiornato
+                                            ?.copyWith(color: AppData.antiFlashWhite), 
                                       ),
                                     ],
                                   ),
@@ -330,14 +316,14 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                         'Categoria: ${_currentTrip.category}',
                         style: Theme.of(
                           context,
-                        ).textTheme.titleMedium?.copyWith(color: AppData.antiFlashWhite), // Colore testo aggiornato
+                        ).textTheme.titleMedium?.copyWith(color: AppData.antiFlashWhite), 
                       ),
                       const SizedBox(height: 10),
                       Text(
                         'Note personali:',
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(
-                              color: AppData.antiFlashWhite, // Colore testo aggiornato
+                              color: AppData.antiFlashWhite, 
                               fontWeight: FontWeight.bold,
                             ),
                       ),
@@ -347,13 +333,13 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                             : 'Nessuna nota aggiunta.',
                         style: Theme.of(
                           context,
-                        ).textTheme.bodyLarge?.copyWith(color: AppData.antiFlashWhite.withOpacity(0.7)), // Colore testo aggiornato
+                        ).textTheme.bodyLarge?.copyWith(color: AppData.antiFlashWhite.withOpacity(0.7)), 
                       ),
                       const SizedBox(height: 20),
                       Text(
                         'Galleria immagini:',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: AppData.antiFlashWhite, // Colore testo aggiornato
+                          color: AppData.antiFlashWhite, 
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -394,7 +380,6 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                                       fit: BoxFit.cover,
                                       placeholder: (context, url) => Center(
                                         child: CircularProgressIndicator(
-                                          // Colore indicatore aggiornato
                                           valueColor: AlwaysStoppedAnimation<Color>(
                                               AppData.antiFlashWhite),
                                         ),
@@ -414,13 +399,11 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                                             ConnectionState.done) {
                                           if (snapshot.hasError ||
                                               !(snapshot.data ?? false)) {
-                                            // Il file non esiste o c'è stato un errore
                                             debugPrint(
                                               'Errore caricamento file locale galleria: $imageUrl, Errore: ${snapshot.error ?? "File non trovato"}',
                                             );
                                             return _buildGalleryErrorPlaceholder();
                                           } else {
-                                            // Il file esiste, caricalo
                                             return Image.file(
                                               File(imageUrl),
                                               width: 120,
@@ -436,10 +419,8 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                                             );
                                           }
                                         }
-                                        // Mentre aspettiamo, mostra un indicatore di caricamento
                                         return Center(
                                           child: CircularProgressIndicator(
-                                            // Colore indicatore aggiornato
                                             valueColor: AlwaysStoppedAnimation<Color>(
                                                 AppData.antiFlashWhite),
                                           ),
@@ -461,7 +442,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
                           : Text(
                               'Nessuna immagine specifica aggiunta per questo viaggio.',
                               style: Theme.of(context).textTheme.bodyLarge
-                                  ?.copyWith(color: AppData.antiFlashWhite.withOpacity(0.7)), // Colore testo aggiornato
+                                  ?.copyWith(color: AppData.antiFlashWhite.withOpacity(0.7)), 
                             ),
                     ],
                   ),
@@ -493,7 +474,6 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
         fit: BoxFit.cover,
         placeholder: (context, url) => Center(
           child: CircularProgressIndicator(
-            // Colore indicatore aggiornato
             valueColor: AlwaysStoppedAnimation<Color>(AppData.antiFlashWhite),
           ),
         ),
@@ -527,7 +507,6 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
               );
             }
           }
-          // Mentre aspettiamo, mostra un indicatore di caricamento
           return const Center(child: CircularProgressIndicator());
         },
       );
@@ -536,15 +515,13 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
 
   Widget _buildErrorPlaceholder() {
     return Container(
-      color: Colors.grey[800], // Sfondo scuro per indicare l'errore
+      color: Colors.grey[800], 
       child: const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Colore dell'icona aggiornato a AppData.antiFlashWhite con opacità
             Icon(Icons.image_not_supported, color: AppData.antiFlashWhite.withOpacity(0.7), size: 60),
             const SizedBox(height: 8),
-            // Colore del testo aggiornato a AppData.antiFlashWhite con opacità
             Text(
               'Immagine non trovata',
               style: TextStyle(color: AppData.antiFlashWhite.withOpacity(0.7), fontSize: 16),
@@ -560,9 +537,7 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
     return Container(
       width: 120,
       height: 120,
-      // Sfondo aggiornato a AppData.charcoal con opacità
       color: AppData.charcoal.withOpacity(0.8),
-      // Colore dell'icona aggiornato a AppData.antiFlashWhite con opacità
       child: Icon(Icons.broken_image, color: AppData.antiFlashWhite.withOpacity(0.7), size: 50),
     );
   }
