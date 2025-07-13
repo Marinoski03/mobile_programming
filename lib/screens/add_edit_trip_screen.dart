@@ -12,7 +12,11 @@ import 'dart:async';
 
 import '../models/trip.dart';
 import '../helpers/trip_database_helper.dart';
+<<<<<<< HEAD
 import '../utils/app_data.dart'; // Importa il file AppData
+=======
+import '../utils/app_data.dart';
+>>>>>>> 7f3a8e9b4c93d5fd89e280c886461b3a8cb6791a
 
 class AddEditTripScreen extends StatefulWidget {
   final Trip? trip;
@@ -37,12 +41,19 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
   final List<String> _newImagePaths = [];
   final List<String> _existingImageUrls = [];
 
+<<<<<<< HEAD
   // Nominatim related variables
   final TextEditingController _locationSearchController = TextEditingController();
   List<dynamic> _locationSuggestions = [];
   Timer? _debounce;
 
   // Funzione per pulire il percorso dell'immagine
+=======
+  TextEditingController _locationSearchController = TextEditingController();
+  List<dynamic> _locationSuggestions = [];
+  Timer? _debounce;
+
+>>>>>>> 7f3a8e9b4c93d5fd89e280c886461b3a8cb6791a
   String _sanitizeImagePath(String path) {
     return path.replaceAll('["', '').replaceAll('"]', '').replaceAll('"', '');
   }
@@ -60,8 +71,11 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
       _notes = widget.trip!.notes;
       _isFavorite = widget.trip!.isFavorite;
       _toBeRepeated = widget.trip!.toBeRepeated;
+<<<<<<< HEAD
       
       // Sanitizza i percorsi delle immagini esistenti
+=======
+>>>>>>> 7f3a8e9b4c93d5fd89e280c886461b3a8cb6791a
       for (String url in widget.trip!.imageUrls) {
         _existingImageUrls.add(_sanitizeImagePath(url));
       }
@@ -180,7 +194,10 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
     });
   }
 
+<<<<<<< HEAD
   // Funzione per cercare locations usando Nominatim
+=======
+>>>>>>> 7f3a8e9b4c93d5fd89e280c886461b3a8cb6791a
   Future<void> _searchLocation(String query) async {
     if (query.isEmpty) {
       if (mounted) {
@@ -222,7 +239,10 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
     }
   }
 
+<<<<<<< HEAD
   // Funzione debounce per la ricerca delle location
+=======
+>>>>>>> 7f3a8e9b4c93d5fd89e280c886461b3a8cb6791a
   void _onLocationSearchChanged(String query) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
@@ -230,12 +250,20 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
     });
   }
 
+<<<<<<< HEAD
   // Funzione per gestire la selezione di un location suggerita
   void _selectLocationSuggestion(Map<String, dynamic> suggestion) {
     setState(() {
       _selectedLocation = suggestion['display_name'] ?? '';
       _locationSearchController.text = suggestion['display_name'] ?? '';
       _locationSuggestions = [];
+=======
+  void _selectLocationSuggestion(Map<String, dynamic> suggestion) {
+    setState(() {
+      _selectedLocation = suggestion['display_name'];
+      _locationSearchController.text = suggestion['display_name'];
+      _locationSuggestions = []; // Clear suggestions after selection
+>>>>>>> 7f3a8e9b4c93d5fd89e280c886461b3a8cb6791a
     });
   }
 
@@ -243,8 +271,13 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
 
+<<<<<<< HEAD
       // Assicura che _selectedLocation sia impostato dal controller se necessario
       if (_selectedLocation.isEmpty && _locationSearchController.text.isNotEmpty) {
+=======
+      if (_selectedLocation.isEmpty &&
+          _locationSearchController.text.isNotEmpty) {
+>>>>>>> 7f3a8e9b4c93d5fd89e280c886461b3a8cb6791a
         _selectedLocation = _locationSearchController.text;
       } else if (_locationSearchController.text.isEmpty) {
         _selectedLocation = 'Nessuna Nazione';
@@ -363,7 +396,10 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                   ),
                   const SizedBox(height: 20),
 
+<<<<<<< HEAD
                   // Campo Location con ricerca Nominatim
+=======
+>>>>>>> 7f3a8e9b4c93d5fd89e280c886461b3a8cb6791a
                   TextFormField(
                     controller: _locationSearchController,
                     decoration: InputDecoration(
@@ -391,7 +427,11 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                             )
                           : null,
                     ),
+<<<<<<< HEAD
                     style: const TextStyle(color: AppData.antiFlashWhite),
+=======
+                    style: const TextStyle(color: Colors.white),
+>>>>>>> 7f3a8e9b4c93d5fd89e280c886461b3a8cb6791a
                     onChanged: _onLocationSearchChanged,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -400,6 +440,7 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                       return null;
                     },
                     onSaved: (value) {
+<<<<<<< HEAD
                       _selectedLocation = value ?? '';
                     },
                   ),
@@ -408,6 +449,14 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                   if (_locationSuggestions.isNotEmpty)
                     Container(
                       constraints: const BoxConstraints(maxHeight: 200),
+=======
+                      _selectedLocation = value!;
+                    },
+                  ),
+                  if (_locationSuggestions.isNotEmpty)
+                    Container(
+                      constraints: BoxConstraints(maxHeight: 200),
+>>>>>>> 7f3a8e9b4c93d5fd89e280c886461b3a8cb6791a
                       decoration: BoxDecoration(
                         color: AppData.charcoal.withOpacity(0.8), // SFONDO SUGGERIMENTI
                         borderRadius: BorderRadius.circular(8.0),
