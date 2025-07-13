@@ -116,8 +116,8 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
             expandedHeight: 250.0,
             floating: false,
             pinned: true,
-            backgroundColor: AppData
-                .antiFlashWhite, // Colore di sfondo dell'AppBar cambiato a antiFlashWhite
+            backgroundColor:
+                AppData.silverLakeBlue, // Colore di sfondo dell'AppBar
             flexibleSpace: FlexibleSpaceBar(
               titlePadding: const EdgeInsets.only(
                 left: 16.0,
@@ -128,8 +128,8 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
               title: Text(
                 _currentTrip.title,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: AppData
-                      .antiFlashWhite, // Colore del titolo nella AppBar cambiato a antiFlashWhite
+                  color:
+                      AppData.antiFlashWhite, // Colore del titolo nella AppBar
                   fontWeight: FontWeight.bold,
                   shadows: [
                     Shadow(
@@ -152,23 +152,20 @@ class _TripDetailScreenState extends State<TripDetailScreen> {
               IconButton(
                 icon: const Icon(
                   Icons.edit,
-                  color: AppData
-                      .charcoal, // Colore icona modifica cambiato a charcoal
+                  color: AppData.antiFlashWhite, // Colore icona modifica
                 ),
                 onPressed: _navigateToEditScreen,
               ),
               IconButton(
                 icon: const Icon(
                   Icons.delete,
-                  color: AppData
-                      .charcoal, // Colore icona elimina cambiato a charcoal
+                  color: AppData.antiFlashWhite, // Colore icona elimina
                 ),
                 onPressed: _confirmDelete,
               ),
             ],
             iconTheme: const IconThemeData(
-              color: AppData
-                  .charcoal, // Colore delle icone nell'AppBar cambiato a charcoal
+              color: AppData.antiFlashWhite, // Colore delle icone nell'AppBar
             ),
           ),
           SliverList(
