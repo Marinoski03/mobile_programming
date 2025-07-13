@@ -12,10 +12,10 @@ import 'dart:async';
 
 import '../models/trip.dart';
 import '../helpers/trip_database_helper.dart';
-import '../utils/app_data.dart'; // Importa AppData
+import '../utils/app_data.dart';
 
 class AddEditTripScreen extends StatefulWidget {
-  final Trip? trip; // Trip è ora opzionale per la creazione
+  final Trip? trip;
 
   const AddEditTripScreen({super.key, this.trip});
 
@@ -26,7 +26,7 @@ class AddEditTripScreen extends StatefulWidget {
 class _AddEditTripScreenState extends State<AddEditTripScreen> {
   final _formKey = GlobalKey<FormState>();
   late String _title;
-  late String _selectedLocation; // This will be the full selected location name
+  late String _selectedLocation;
   late DateTime _startDate;
   late DateTime _endDate;
   late String _category;
@@ -37,14 +37,11 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
   final List<String> _newImagePaths = [];
   final List<String> _existingImageUrls = [];
 
-  // Nominatim related variables
   TextEditingController _locationSearchController = TextEditingController();
   List<dynamic> _locationSuggestions = [];
   Timer? _debounce;
 
-  // NUOVO METODO: Funzione per pulire il percorso dell'immagine
   String _sanitizeImagePath(String path) {
-    // Rimuove [" e "] all'inizio e alla fine e qualsiasi altra virgoletta doppia.
     return path.replaceAll('["', '').replaceAll('"]', '').replaceAll('"', '');
   }
 
@@ -54,21 +51,19 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
     if (widget.trip != null) {
       _title = widget.trip!.title;
       _selectedLocation = widget.trip!.location;
-      _locationSearchController.text =
-          widget.trip!.location; // Set initial value for search field
+      _locationSearchController.text = widget.trip!.location;
       _startDate = widget.trip!.startDate;
       _endDate = widget.trip!.endDate;
       _category = widget.trip!.category;
       _notes = widget.trip!.notes;
       _isFavorite = widget.trip!.isFavorite;
       _toBeRepeated = widget.trip!.toBeRepeated;
-      // Modificato: SANITIZZA I PERCORSI DELLE IMMAGINI ESISTENTI AL CARICAMENTO
       for (String url in widget.trip!.imageUrls) {
         _existingImageUrls.add(_sanitizeImagePath(url));
       }
     } else {
       _title = '';
-      _selectedLocation = ''; // Initialize as empty for new trips
+      _selectedLocation = '';
       _locationSearchController.text = '';
       _startDate = DateTime.now();
       _endDate = DateTime.now().add(const Duration(days: 7));
@@ -155,7 +150,6 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
         final String savedPath = p.join(appDir.path, fileName);
 
         final newFile = await imageFile.copy(savedPath);
-        // NON SANITIZZARE QUI, IL PATH È GIÀ CORRETTO DA ImagePicker E copy
         tempSavedPaths.add(newFile.path);
         print('DEBUG - Immagine copiata e salvata in: ${newFile.path}');
       } catch (e) {
@@ -185,7 +179,6 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
     });
   }
 
-  // NEW: Function to search for locations using Nominatim
   Future<void> _searchLocation(String query) async {
     if (query.isEmpty) {
       setState(() {
@@ -194,8 +187,6 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
       return;
     }
 
-    // Nominatim's free public usage policy requests clients to limit requests to 1 request per second.
-    // Ensure you respect their Usage Policy: https://nominatim.org/release-docs/latest/api/Search/
     final url = Uri.parse(
       'https://nominatim.openstreetmap.org/search?q=$query&format=json&addressdetails=1&limit=5',
     );
@@ -220,7 +211,6 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
     }
   }
 
-  // NEW: Debounce function for location search
   void _onLocationSearchChanged(String query) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
@@ -228,15 +218,11 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
     });
   }
 
-  // NEW: Function to handle selection of a suggested location
   void _selectLocationSuggestion(Map<String, dynamic> suggestion) {
     setState(() {
       _selectedLocation = suggestion['display_name'];
       _locationSearchController.text = suggestion['display_name'];
       _locationSuggestions = []; // Clear suggestions after selection
-
-      // Attempt to infer continent from addressdetails if available
-      // This is a heuristic and might not always be accurate or available
     });
   }
 
@@ -244,24 +230,20 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
 
-      // Ensure _selectedLocation is set from the text controller if no suggestion was explicitly picked
-      // This handles cases where the user types but doesn't select from suggestions
       if (_selectedLocation.isEmpty &&
           _locationSearchController.text.isNotEmpty) {
         _selectedLocation = _locationSearchController.text;
       } else if (_locationSearchController.text.isEmpty) {
-        _selectedLocation = 'Nessuna Nazione'; // Or handle as validation error
+        _selectedLocation = 'Nessuna Nazione';
       }
 
-      // I percorsi sono già stati sanitizzati all'inizio (per existing)
-      // e sono già puliti da ImagePicker (per new)
       final List<String> allImageUrls = List.from(_existingImageUrls);
       allImageUrls.addAll(_newImagePaths);
 
       final newTrip = Trip(
         id: widget.trip?.id,
         title: _title,
-        location: _selectedLocation, // Use the selected/typed location
+        location: _selectedLocation,
         startDate: _startDate,
         endDate: _endDate,
         category: _category,
@@ -361,7 +343,6 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                   ),
                   const SizedBox(height: 20),
 
-                  // MODIFIED: Replaced Nazione Dropdown with a TextFormField for Nominatim search
                   TextFormField(
                     controller: _locationSearchController,
                     decoration: InputDecoration(
@@ -390,8 +371,7 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                           : null,
                     ),
                     style: const TextStyle(color: Colors.white),
-                    onChanged:
-                        _onLocationSearchChanged, // Call the debounced search function
+                    onChanged: _onLocationSearchChanged,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Inserisci una nazione o città';
@@ -399,16 +379,12 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                       return null;
                     },
                     onSaved: (value) {
-                      _selectedLocation =
-                          value!; // Save the final text in the field
+                      _selectedLocation = value!;
                     },
                   ),
-                  // Display search suggestions
                   if (_locationSuggestions.isNotEmpty)
                     Container(
-                      constraints: BoxConstraints(
-                        maxHeight: 200,
-                      ), // Limit height
+                      constraints: BoxConstraints(maxHeight: 200),
                       decoration: BoxDecoration(
                         color: Colors.blue.shade600,
                         borderRadius: BorderRadius.circular(8.0),
