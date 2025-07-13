@@ -12,7 +12,7 @@ import 'dart:async';
 
 import '../models/trip.dart';
 import '../helpers/trip_database_helper.dart';
-import '../utils/app_data.dart'; // Importa il file AppData
+import '../utils/app_data.dart'; 
 
 class AddEditTripScreen extends StatefulWidget {
   final Trip? trip;
@@ -37,12 +37,10 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
   final List<String> _newImagePaths = [];
   final List<String> _existingImageUrls = [];
 
-  // Nominatim related variables
   final TextEditingController _locationSearchController = TextEditingController();
   List<dynamic> _locationSuggestions = [];
   Timer? _debounce;
 
-  // Funzione per pulire il percorso dell'immagine
   String _sanitizeImagePath(String path) {
     return path.replaceAll('["', '').replaceAll('"]', '').replaceAll('"', '');
   }
@@ -61,7 +59,6 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
       _isFavorite = widget.trip!.isFavorite;
       _toBeRepeated = widget.trip!.toBeRepeated;
       
-      // Sanitizza i percorsi delle immagini esistenti
       for (String url in widget.trip!.imageUrls) {
         _existingImageUrls.add(_sanitizeImagePath(url));
       }
@@ -180,7 +177,6 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
     });
   }
 
-  // Funzione per cercare locations usando Nominatim
   Future<void> _searchLocation(String query) async {
     if (query.isEmpty) {
       if (mounted) {
@@ -222,7 +218,6 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
     }
   }
 
-  // Funzione debounce per la ricerca delle location
   void _onLocationSearchChanged(String query) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
@@ -230,7 +225,6 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
     });
   }
 
-  // Funzione per gestire la selezione di un location suggerita
   void _selectLocationSuggestion(Map<String, dynamic> suggestion) {
     setState(() {
       _selectedLocation = suggestion['display_name'] ?? '';
@@ -243,7 +237,6 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
 
-      // Assicura che _selectedLocation sia impostato dal controller se necessario
       if (_selectedLocation.isEmpty && _locationSearchController.text.isNotEmpty) {
         _selectedLocation = _locationSearchController.text;
       } else if (_locationSearchController.text.isEmpty) {
@@ -291,7 +284,6 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // IMPOSTATO BACKGROUND SCAFFOLD SU ANTI-FLASH WHITE
       backgroundColor: AppData.antiFlashWhite,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
@@ -319,7 +311,6 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
         height: double.infinity,
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            // COLORI DEL GRADIENTE CONFORMI AL PRIMARIO E AL NEUTRO SCURO
             colors: [
               AppData.silverLakeBlue.withOpacity(0.7),
               AppData.charcoal.withOpacity(0.9)
@@ -336,12 +327,10 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Campo Titolo
                   TextFormField(
                     initialValue: _title,
                     decoration: InputDecoration(
                       labelText: 'Titolo del Viaggio',
-                      // TESTO E BORDI DEI CAMPI DI INPUT SU SFONDO SCURO -> ANTI-FLASH WHITE
                       labelStyle: TextStyle(color: AppData.antiFlashWhite.withOpacity(0.7)),
                       enabledBorder: UnderlineInputBorder(
                         borderSide: BorderSide(color: AppData.antiFlashWhite.withOpacity(0.5)),
@@ -363,7 +352,6 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Campo Location con ricerca Nominatim
                   TextFormField(
                     controller: _locationSearchController,
                     decoration: InputDecoration(
@@ -404,12 +392,11 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                     },
                   ),
                   
-                  // Mostra i suggerimenti della ricerca
                   if (_locationSuggestions.isNotEmpty)
                     Container(
                       constraints: const BoxConstraints(maxHeight: 200),
                       decoration: BoxDecoration(
-                        color: AppData.charcoal.withOpacity(0.8), // SFONDO SUGGERIMENTI
+                        color: AppData.charcoal.withOpacity(0.8), 
                         borderRadius: BorderRadius.circular(8.0),
                       ),
                       child: ListView.builder(
@@ -420,7 +407,7 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                           return ListTile(
                             title: Text(
                               suggestion['display_name'] ?? '',
-                              style: const TextStyle(color: AppData.antiFlashWhite), // TESTO SUGGERIMENTI
+                              style: const TextStyle(color: AppData.antiFlashWhite), 
                             ),
                             onTap: () => _selectLocationSuggestion(suggestion),
                           );
@@ -564,19 +551,17 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Switch Preferiti
                   Row(
                     children: [
                       Icon(
                         _isFavorite ? Icons.star : Icons.star_border,
-                        // ICONA PREFERITI ACCESA -> CERISE
                         color: _isFavorite ? AppData.cerise : AppData.antiFlashWhite.withOpacity(0.7),
                       ),
                       const SizedBox(width: 8),
                       Text(
                         'Aggiungi ai preferiti',
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: AppData.antiFlashWhite, // TESTO SU SFONDO SCURO
+                          color: AppData.antiFlashWhite, 
                         ),
                       ),
                       Switch(
@@ -586,7 +571,6 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                             _isFavorite = value;
                           });
                         },
-                        // SWITCH PREFERITI ACCESO -> CERISE
                         activeColor: AppData.cerise,
                         inactiveThumbColor: AppData.charcoal.withOpacity(0.5),
                         inactiveTrackColor: AppData.charcoal.withOpacity(0.7),
@@ -595,19 +579,17 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                   ),
                   const SizedBox(height: 10),
 
-                  // Switch Da Ripetere
                   Row(
                     children: [
                       Icon(
                         _toBeRepeated ? Icons.repeat_on : Icons.repeat,
-                        // ICONA DA RIPETERE ACCESA -> CERISE
                         color: _toBeRepeated ? AppData.cerise : AppData.antiFlashWhite.withOpacity(0.7),
                       ),
                       const SizedBox(width: 8),
                       Text(
                         'Segna da ripetere',
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: AppData.antiFlashWhite, // TESTO SU SFONDO SCURO
+                          color: AppData.antiFlashWhite, 
                         ),
                       ),
                       Switch(
@@ -617,7 +599,6 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                             _toBeRepeated = value;
                           });
                         },
-                        // SWITCH DA RIPETERE ACCESO -> CERISE
                         activeColor: AppData.cerise,
                         inactiveThumbColor: AppData.charcoal.withOpacity(0.5),
                         inactiveTrackColor: AppData.charcoal.withOpacity(0.7),
@@ -626,7 +607,6 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Sezione Immagini
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8.0),
                     child: Column(
@@ -635,7 +615,7 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                         Text(
                           'Immagini del viaggio:',
                           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: AppData.antiFlashWhite, // TESTO TITOLO SEZIONE
+                            color: AppData.antiFlashWhite, 
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -646,7 +626,7 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                           Text(
                             'Foto già caricate:',
                             style: TextStyle(
-                              color: AppData.antiFlashWhite.withOpacity(0.7), // TESTO SECONDARIO
+                              color: AppData.antiFlashWhite.withOpacity(0.7), 
                               fontSize: 14,
                             ),
                           ),
@@ -674,10 +654,10 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                                             return Container(
                                               width: 100,
                                               height: 100,
-                                              color: AppData.charcoal.withOpacity(0.6), // SFONDO ERRORE IMMAGINE
+                                              color: AppData.charcoal.withOpacity(0.6), 
                                               child: Icon(
                                                 Icons.broken_image,
-                                                color: AppData.antiFlashWhite.withOpacity(0.7), // ICONA ERRORE IMMAGINE
+                                                color: AppData.antiFlashWhite.withOpacity(0.7), 
                                                 size: 40,
                                               ),
                                             );
@@ -691,10 +671,10 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                                           onTap: () => _removeImage(index, isExisting: true),
                                           child: const CircleAvatar(
                                             radius: 12,
-                                            backgroundColor: Colors.red, // COLORE CHIUSURA IMMAGINE
+                                            backgroundColor: Colors.red, 
                                             child: Icon(
                                               Icons.close,
-                                              color: AppData.antiFlashWhite, // ICONA CHIUSURA IMMAGINE
+                                              color: AppData.antiFlashWhite, 
                                               size: 16,
                                             ),
                                           ),
@@ -709,16 +689,15 @@ class _AddEditTripScreenState extends State<AddEditTripScreen> {
                           const SizedBox(height: 10),
                         ],
 
-                        // Bottone per aggiungere nuove foto
                         ElevatedButton.icon(
                           onPressed: _pickImage,
-                          icon: const Icon(Icons.add_a_photo, color: AppData.antiFlashWhite), // ICONA BOTTONE
+                          icon: const Icon(Icons.add_a_photo, color: AppData.antiFlashWhite), 
                           label: const Text(
                             'Aggiungi Nuove Foto dalla Galleria',
-                            style: TextStyle(color: AppData.antiFlashWhite), // TESTO BOTTONE
+                            style: TextStyle(color: AppData.antiFlashWhite), 
                           ),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppData.silverLakeBlue, // COLORE PRIMARIO PER BOTTONE
+                            backgroundColor: AppData.silverLakeBlue, 
                             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10),
